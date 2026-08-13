@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# Security fixes (LOW-03, LOW-04)
+all_matches.json
+page_chunks.json
+recovered_*.json
+cloudflared.exe
+ngrok.zip
+
+# Admin / Debug scripts (LOW-03, LOW-04)
+/scripts/
+check-receipts.js
+fix-stuck-req.js
+tunnel.log
+*.patch
+CHAT_LOG.md
