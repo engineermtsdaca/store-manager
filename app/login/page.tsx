@@ -15,6 +15,10 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // --- Preferences ---
+  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [language, setLanguage] = useState<'en' | 'am'>('en')
+
   useEffect(() => {
     (window as any).__TEST_LOGIN = (u: string, p: string) => {
       setUsername(u)
@@ -120,9 +124,9 @@ export default function LoginPage() {
     width: '100%',
     padding: '11px 14px',
     borderRadius: '10px',
-    border: '1px solid #334155',
-    backgroundColor: '#0f172a',
-    color: '#f8fafc',
+    border: isDarkMode ? '1px solid #334155' : '1px solid #cbd5e1',
+    backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
+    color: isDarkMode ? '#f8fafc' : '#0f172a',
     fontSize: '14px',
     outline: 'none',
     boxSizing: 'border-box',
@@ -133,7 +137,7 @@ export default function LoginPage() {
     fontSize: '12px',
     fontWeight: 700,
     marginBottom: '6px',
-    color: '#94a3b8',
+    color: isDarkMode ? '#94a3b8' : '#64748b',
   }
   const btnPrimary: React.CSSProperties = {
     width: '100%',
@@ -166,13 +170,30 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0f172a',
-        color: '#f8fafc',
+        backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
+        color: isDarkMode ? '#f8fafc' : '#0f172a',
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        backgroundImage: 'radial-gradient(ellipse at top left, rgba(30,58,95,0.4) 0%, transparent 60%)',
+        backgroundImage: isDarkMode 
+          ? 'linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.6)), url(/bg-building.jpg)'
+          : 'linear-gradient(rgba(248, 249, 254, 0.5), rgba(254, 242, 242, 0.6)), url(/bg-building.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
         padding: '16px',
+        position: 'relative',
       }}
     >
+      {/* --- PREFERENCES TOGGLES --- */}
+      <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '12px', alignItems: 'center', background: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', padding: '8px', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
+        <div style={{ display: 'flex', background: isDarkMode ? 'rgba(244,247,254,0.15)' : 'rgba(0,0,0,0.1)', padding: '2px', borderRadius: '12px', fontSize: '12px' }}>
+            <button onClick={() => setLanguage('am')} style={{ padding: '4px 12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: language === 'am' ? '#2563eb' : 'transparent', color: language === 'am' ? '#fff' : (isDarkMode ? '#bfdbfe' : '#475569') }}>አማርኛ</button>
+            <button onClick={() => setLanguage('en')} style={{ padding: '4px 12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: language === 'en' ? '#2563eb' : 'transparent', color: language === 'en' ? '#fff' : (isDarkMode ? '#bfdbfe' : '#475569') }}>English</button>
+        </div>
+        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ padding: '6px', borderRadius: '12px', background: isDarkMode ? 'rgba(244,247,254,0.1)' : 'rgba(0,0,0,0.1)', border: 'none', color: isDarkMode ? '#fff' : '#000', cursor: 'pointer' }} title="Toggle Day/Night">
+            {isDarkMode ? '☀️' : '🌙'}
+        </button>
+      </div>
+
       <div
         style={{
           width: '100%',
@@ -182,10 +203,12 @@ export default function LoginPage() {
         {/* ─── Main Login Card ─── */}
         <div
           style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '20px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
-            border: '1px solid #334155',
+            boxShadow: isDarkMode ? '0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)' : '0 25px 60px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05)',
+            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0,0,0,0.1)',
             overflow: 'hidden',
           }}
         >
@@ -193,18 +216,18 @@ export default function LoginPage() {
           <div
             style={{
               padding: '24px 28px 20px',
-              borderBottom: '1px solid #1e3a5f',
-              background: 'linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%)',
+              borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0,0,0,0.1)',
+              background: isDarkMode ? 'linear-gradient(135deg, rgba(30, 58, 95, 0.6) 0%, rgba(30, 41, 59, 0.6) 100%)' : 'linear-gradient(135deg, rgba(240, 244, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%)',
             }}
           >
             <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#60a5fa', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               Cappadocia Real Estate S.C.
             </p>
-            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#ffffff' }}>
-              🏗️ Store Management System
+            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: isDarkMode ? '#ffffff' : '#1e293b' }}>
+              {language === 'am' ? '🏗️ የዕቃ አስተዳደር' : '🏗️ Store Management System'}
             </h1>
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>
-              Sign in to your account
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: isDarkMode ? '#64748b' : '#475569' }}>
+              {language === 'am' ? 'ወደ መለያዎ ይግቡ' : 'Sign in to your account'}
             </p>
           </div>
 

@@ -4,10 +4,13 @@ import { createClient } from '@/lib/supabase-server'
 import { requireRole } from '@/lib/auth-helpers'
 import { sendTelegramToMatchingUsers } from '@/lib/telegram'
 
-function getAdminClient() {
+function getAdminClient(fallbackClient: any) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+  if (!key) {
+    console.warn('SUPABASE_SERVICE_ROLE_KEY is not configured, falling back to user client')
+    return fallbackClient
+  }
   return createAdminClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
 }
 
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden: Your role cannot send system messages' }, { status: 403 })
   }
 
-  const adminSupabase = getAdminClient()
+  const adminSupabase = getAdminClient(supabase)
   const { title, body, action_key, recipient_role, recipient_company, recipient_site_id } = await req.json()
 
   let finalSiteId = recipient_site_id
@@ -131,7 +134,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Now use admin client for the actual update (needed to bypass RLS for UPDATE)
-  const adminSupabase = getAdminClient()
+  const adminSupabase = getAdminClient(supabase)
   const { error } = await adminSupabase
     .from('system_messages')
     .update({ is_dismissed: true, is_read: true } as any)

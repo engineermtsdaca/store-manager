@@ -96,12 +96,12 @@ export async function PATCH(req: NextRequest) {
   } else if (action === 'storekeeper_signoff') {
     if (role !== 'storekeeper') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const { data: reqToSign, error: reqError } = await supabase.from('material_requests').select('*, user_profiles(name_en)').eq('id', request_id).single()
-    if (reqError || !reqToSign) return NextResponse.json({ error: 'Request not found: ' })
+    if (reqError || !reqToSign) return NextResponse.json({ error: 'Request not found' }, { status: 404 })
 
     const { data: invItem, error: invError } = await supabase.from('inventory_items')
       .select('id').eq('name', reqToSign.item).eq('site_id', reqToSign.site_id).single()
     
-    if (invError || !invItem) return NextResponse.json({ error: 'Inventory item not found: ' })
+    if (invError || !invItem) return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
 
     const { error: rpcError, data: rpcData } = await supabase.rpc('log_inventory_usage', { 
       p_site_id: reqToSign.site_id,

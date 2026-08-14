@@ -367,7 +367,7 @@ export default function CappadociaApp() {
                 </button>
             </div>
         );
-    };;
+    };
 
     // --- LANGUAGE RENDERING HELPER ---
     const renderText = (amText: string, enText: string, extraClasses = '') => {
@@ -983,7 +983,17 @@ export default function CappadociaApp() {
     };
 
     return (
-        <div className={`min-h-screen font-sans pb-12 transition-all duration-500 noise-bg ${isDarkMode ? 'bg-[#0f172a] text-white' : 'bg-gradient-to-br from-[#f0f4ff] via-[#f8f9fe] to-[#fef2f2] text-[#1B2559]'}`}>
+        <div 
+            className={`min-h-screen font-sans pb-12 transition-all duration-500 noise-bg ${isDarkMode ? 'text-white' : 'text-[#1B2559]'}`}
+            style={{
+                backgroundImage: isDarkMode 
+                    ? 'linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)), url(/bg-building.jpg)' 
+                    : 'linear-gradient(rgba(248, 249, 254, 0.85), rgba(254, 242, 242, 0.92)), url(/bg-building.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed'
+            }}
+        >
 
             
             {/* --- RECEIPT MODAL & STORE --- */}

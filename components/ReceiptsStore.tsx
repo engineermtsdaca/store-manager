@@ -34,29 +34,29 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
             <h2 className="text-xl font-black">
               {language === 'am' ? 'የስርዓት ደረሰኞች (System Receipts)' : 'System Receipts'}
             </h2>
-            <p className={`text-xs font-medium \${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               {language === 'am' ? 'ሁሉንም የተመዘገቡ ደረሰኞች ይመልከቱ' : 'View and print past action receipts'}
             </p>
           </div>
-          <button onClick={onClose} className={`p-2 rounded-xl \${isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-slate-100'}`}>
+          <button onClick={onClose} className={`p-2 rounded-xl ${isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-slate-100'}`}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
 
         {/* FILTERS */}
-        <div className={`p-6 border-b flex gap-4 \${isDarkMode ? 'border-slate-800 bg-[#1e293b]/30' : 'border-slate-100 bg-slate-50'}`}>
+        <div className={`p-6 border-b flex gap-4 ${isDarkMode ? 'border-slate-800 bg-[#1e293b]/30' : 'border-slate-100 bg-slate-50'}`}>
           <input 
             type="text" 
             placeholder={language === 'am' ? 'በደረሰኝ ቁጥር ይፈልጉ...' : 'Search by receipt number or type...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`flex-1 p-3 rounded-xl text-sm border outline-none \${isDarkMode ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200'}`}
+            className={`flex-1 p-3 rounded-xl text-sm border outline-none ${isDarkMode ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200'}`}
           />
           
           <select 
             value={filterUser}
             onChange={(e) => setFilterUser(e.target.value)}
-            className={`w-64 p-3 rounded-xl text-sm border outline-none \${isDarkMode ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200'}`}
+            className={`w-64 p-3 rounded-xl text-sm border outline-none ${isDarkMode ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200'}`}
           >
             <option value="All">All Users</option>
             {uniqueUsers.map(u => (
@@ -72,7 +72,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className={`text-xs uppercase font-extrabold \${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                <tr className={`text-xs uppercase font-extrabold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                   <th className="p-4 border-b">Receipt No.</th>
                   <th className="p-4 border-b">Date</th>
                   <th className="p-4 border-b">Action</th>
@@ -83,7 +83,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
               </thead>
               <tbody className="text-sm">
                 {filteredReceipts.map(receipt => (
-                  <tr key={receipt.id} className={`group \${isDarkMode ? 'hover:bg-[#1e293b]/50 border-slate-800/50' : 'hover:bg-slate-50 border-slate-100'} border-b last:border-0`}>
+                  <tr key={receipt.id} className={`group ${isDarkMode ? 'hover:bg-[#1e293b]/50 border-slate-800/50' : 'hover:bg-slate-50 border-slate-100'} border-b last:border-0`}>
                     <td className="p-4 font-mono font-bold">{receipt.receipt_number}</td>
                     <td className="p-4 font-medium text-slate-500">{new Date(receipt.created_at).toLocaleString()}</td>
                     <td className="p-4 font-bold text-blue-500">{receipt.action_type}</td>
@@ -92,7 +92,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
                     <td className="p-4 text-right">
                       <button 
                         onClick={() => onPrint(receipt)}
-                        className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors \${isDarkMode ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-blue-600 text-slate-600 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-blue-600 text-slate-600 hover:text-white'}`}
                       >
                         Print
                       </button>

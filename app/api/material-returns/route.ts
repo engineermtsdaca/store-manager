@@ -4,9 +4,12 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 
 // Use service role key to bypass RLS for administrative actions (like sending system messages)
-const getAdminClient = () => {
+const getAdminClient = (fallbackClient: any) => {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+  if (!key) {
+    console.warn('SUPABASE_SERVICE_ROLE_KEY is not configured, falling back to user client')
+    return fallbackClient
+  }
   return createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     key,
@@ -37,7 +40,7 @@ export async function POST(req: Request) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
 
-    const adminSupabase = getAdminClient()
+    const adminSupabase = getAdminClient(supabase)
     const { reqId, itemName, qty, reason } = await req.json()
 
     // Subcontractor submitting a return
@@ -119,7 +122,7 @@ export async function PATCH(req: Request) {
     const { data: profile } = await supabase.from('user_profiles').select('name_en, role, site_id').eq('id', user.id).single()
     if (!profile || profile.role !== 'storekeeper') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    const adminSupabase = getAdminClient()
+    const adminSupabase = getAdminClient(supabase)
     const { messageId } = await req.json()
     if (!messageId) return NextResponse.json({ error: 'messageId is required' }, { status: 400 })
 
