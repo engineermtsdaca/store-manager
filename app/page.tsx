@@ -324,7 +324,7 @@ export default function CappadociaApp() {
             );
         }
 
-        const infoOnlyKeys = ['engineer_ship_notice', 'subcon_received', 'petty_cash_replenish', 'transfer_verify', 'inventory_add'];
+        const infoOnlyKeys = ['engineer_ship_notice', 'subcon_received', 'petty_cash_replenish', 'transfer_verify', 'inventory_add', 'info_only'];
         const isRejection = message.title?.toLowerCase().includes('reject');
         
         if (infoOnlyKeys.includes(message.actionKey) || isRejection) {

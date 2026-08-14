@@ -62,44 +62,11 @@ export async function POST(req: Request) {
 
       if (error) throw error
 
-      // Generate receipt for subcontractor
-      const receiptNum = generateId('RET')
-      await adminSupabase.from('action_receipts').insert({
-        receipt_number: receiptNum,
-        action_type: 'Material Return Request',
-        details: {
-          item: itemName,
-          qty_returned: parseFloat(qty),
-          reason: reason,
-          subcontractor: profile.name_en,
-          status: 'Pending Storekeeper Approval'
-        },
-        site_id: profile.site_id,
-        user_id: user.id
-      })
+      // The Subcontractor only initiates the request.
+      // The Storekeeper will generate the receipt and update the material_requests quantity upon approval.
 
-      // Remove from received items list by updating qty.
-      // If returned qty >= original qty, change status to pending_engineer so it leaves the list.
-      // Otherwise reduce the qty.
-      const { data: reqData } = await adminSupabase.from('material_requests')
-        .select('qty').eq('id', reqId).single()
-      
-      if (reqData) {
-        const remaining = reqData.qty - parseFloat(qty)
-        if (remaining <= 0) {
-          // All returned, remove from received items
-          await adminSupabase.from('material_requests')
-            .update({ status: 'pending_engineer' })
-            .eq('id', reqId)
-        } else {
-          // Partial return, reduce qty
-          await adminSupabase.from('material_requests')
-            .update({ qty: remaining })
-            .eq('id', reqId)
-        }
-      }
 
-      return NextResponse.json({ success: true, receiptNumber: receiptNum })
+      return NextResponse.json({ success: true, message: "Return requested successfully. Awaiting Storekeeper approval." })
     }
 
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -138,6 +105,7 @@ export async function PATCH(req: Request) {
     const meta = msg.reference_type ? JSON.parse(msg.reference_type) : {}
     const qty = meta.qty
     const itemName = meta.item
+    const reqId = msg.reference_id
 
     // Find the item in inventory
     const { data: itemData } = await supabase.from('inventory_items')
@@ -159,6 +127,43 @@ export async function PATCH(req: Request) {
 
     const rpcResult = rpcData as any
     if (rpcError || !rpcResult?.success) throw new Error(rpcResult?.error || 'Failed to update inventory')
+
+    // 1. Generate receipt for subcontractor, finalized by Storekeeper
+    const receiptNum = generateId('RET')
+    await adminSupabase.from('action_receipts').insert({
+      receipt_number: receiptNum,
+      action_type: 'Material Return Request',
+      details: {
+        item: itemName,
+        qty_returned: parseFloat(qty),
+        reason: meta.reason,
+        subcontractor: meta.subcontractor,
+        status: 'Approved by Storekeeper'
+      },
+      site_id: profile.site_id,
+      user_id: msg.recipient_user_id || user.id
+    })
+
+    // 2. Remove from received items list by updating qty
+    if (reqId) {
+      const { data: reqData } = await adminSupabase.from('material_requests')
+        .select('qty').eq('id', reqId).single()
+      
+      if (reqData) {
+        const remaining = reqData.qty - parseFloat(qty)
+        if (remaining <= 0) {
+          // All returned, remove from received items
+          await adminSupabase.from('material_requests')
+            .update({ status: 'pending_engineer' })
+            .eq('id', reqId)
+        } else {
+          // Partial return, reduce qty
+          await adminSupabase.from('material_requests')
+            .update({ qty: remaining })
+            .eq('id', reqId)
+        }
+      }
+    }
 
     // Generate system message for Engineer (info only, no action needed)
     await adminSupabase.from('system_messages').insert({

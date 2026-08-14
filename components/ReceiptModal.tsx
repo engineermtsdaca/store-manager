@@ -1,5 +1,8 @@
 import React from 'react';
 import { Receipt } from '@/hooks/useReceipts';
+import { useState } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ReceiptModalProps {
   receipt: Receipt | null;
@@ -10,8 +13,32 @@ interface ReceiptModalProps {
 export default function ReceiptModal({ receipt, onClose, language }: ReceiptModalProps) {
   if (!receipt) return null;
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById('printable-receipt-content');
+    if (!element) return;
+    
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`receipt-${receipt.receipt_number}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF', error);
+      alert(language === 'am' ? 'ፒዲኤፍ ማውረድ አልተቻለም' : 'Failed to download PDF');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -20,7 +47,7 @@ export default function ReceiptModal({ receipt, onClose, language }: ReceiptModa
       <div className="bg-white text-slate-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] print:shadow-none print:max-w-none">
         
         {/* Printable Area */}
-        <div className="p-8 overflow-y-auto print:p-0 print:text-black">
+        <div id="printable-receipt-content" className="p-8 overflow-y-auto print:p-0 print:text-black bg-white rounded-t-2xl">
           <div className="text-center border-b-2 border-slate-200 pb-6 mb-6 print:border-black">
             <h1 className="text-2xl font-black uppercase tracking-widest text-slate-900 print:text-black">
               Cappadocia Realestate
@@ -70,18 +97,33 @@ export default function ReceiptModal({ receipt, onClose, language }: ReceiptModa
         </div>
 
         {/* Action Buttons (Hidden when printing) */}
-        <div className="p-4 border-t bg-slate-50 rounded-b-2xl flex gap-3 print:hidden">
+        <div className="p-4 border-t bg-slate-50 rounded-b-2xl flex gap-2 print:hidden">
           <button 
             onClick={onClose}
-            className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition"
+            className="flex-1 py-3 px-2 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition text-sm"
           >
-            {language === 'am' ? 'ዝለል (Skip for now)' : 'Skip for now'}
+            {language === 'am' ? 'ዝለል (Skip)' : 'Skip'}
+          </button>
+          <button 
+            onClick={handleDownloadPdf}
+            disabled={isDownloading}
+            className="flex-1 py-3 px-2 rounded-xl font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 disabled:opacity-50 transition text-sm flex justify-center items-center gap-1"
+          >
+            {isDownloading ? (
+              <span className="animate-pulse">{language === 'am' ? 'እያወረደ...' : 'Downloading...'}</span>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                {language === 'am' ? 'አውርድ (Download)' : 'Download'}
+              </>
+            )}
           </button>
           <button 
             onClick={handlePrint}
-            className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-600/30"
+            className="flex-1 py-3 px-2 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 text-sm flex justify-center items-center gap-1"
           >
-            {language === 'am' ? 'አትም (Print Receipt)' : 'Print Receipt'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            {language === 'am' ? 'አትም (Print)' : 'Print'}
           </button>
         </div>
       </div>
