@@ -86,17 +86,6 @@ export default function CappadociaApp() {
         }
     }, [profile, fetchReceipts]);
 
-    // Prevent body scrolling when any modal overlay is open to fix double scrollbars
-    useEffect(() => {
-        const isModalOpen = activeOverlay !== null || showChangePassword || showAvailablesId !== null || showInstantApprovalPopup || selectedReceipt !== null;
-        if (isModalOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [activeOverlay, showChangePassword, showAvailablesId, showInstantApprovalPopup, selectedReceipt]);
-
     const { materialRequests, refresh: refreshMaterialRequests } = useMaterialRequests(profile?.site_id ?? undefined);
     const { inventory: friendshipInventory, addItem: addInventoryItem, logUsage: logInventoryUsage, refresh: refreshInventory } = useInventory(profile?.site_id ?? null);
     const { orders: rawOrders, updateStatus: updatePOStatus, createOrder: createPO, refresh: refreshOrders } = usePurchaseOrders(undefined);
@@ -225,6 +214,18 @@ export default function CappadociaApp() {
 
     // --- LIVE SYSTEM COMPANY FILTER ---
     const [companyFilter, setCompanyFilter] = useState<'all' | 'Cappadocia' | 'Addisu Habte' | 'Vila Verde'>('all');
+
+    // --- PREVENT BODY SCROLLING WHEN MODALS ARE OPEN ---
+    useEffect(() => {
+        if (activeOverlay || showInstantApprovalPopup || showProformaModal || pendingReceipt || showChangePassword) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [activeOverlay, showInstantApprovalPopup, showProformaModal, pendingReceipt, showChangePassword]);
 
     // --- Local Material Requests (client-side, sent to API) ---
     // --- Local Material Requests (client-side, sent to API) ---
