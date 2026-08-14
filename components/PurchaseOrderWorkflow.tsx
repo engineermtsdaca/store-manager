@@ -180,7 +180,7 @@ export default function PurchaseOrderWorkflow({
                     className={`flex-1 ${isUpload || isSign ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all`}
                 >
                     {isProcessing ? 'Processing...' : (
-                        <>{isUpload ? '📁 ' : isSign ? '✍️ ' : '✓ '} {lang ? actionLabelAm : actionLabel}</>
+                        <>{isUpload ? '📁 ' : isSign ? '✍️ ' : '✅ '} {lang ? actionLabelAm : actionLabel}</>
                     )}
                 </button>
                 {onReject && (
@@ -665,7 +665,7 @@ export default function PurchaseOrderWorkflow({
                                 onClick={withProcessing(p.id, () => handleSKReceive(p))}
                                 className="flex-1 md:flex-none bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
                             >
-                                {processingIds.has(p.id) ? 'Processing...' : (`✓ ${lang ? 'ቁጥር አረጋግጥ እና ተቀበል' : 'Count & Confirm Receipt'}`)}
+                                {processingIds.has(p.id) ? 'Processing...' : (`✅ ${lang ? 'ቁጥር አረጋግጥ እና ተቀበል' : 'Count & Confirm Receipt'}`)}
                             </button>
                         </div>
                     ))}
