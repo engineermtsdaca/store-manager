@@ -1,7 +1,7 @@
 import React from 'react';
 import { Receipt } from '@/hooks/useReceipts';
 import { useState } from 'react';
-import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
 
 interface ReceiptModalProps {
@@ -25,11 +25,21 @@ export default function ReceiptModal({ receipt, onClose, language }: ReceiptModa
     
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
+      // Use dom-to-image-more which correctly passes CSS to browser rendering engine
+      const scale = 2;
+      const imgData = await domtoimage.toPng(element, {
+        bgcolor: '#ffffff',
+        width: element.clientWidth * scale,
+        height: element.clientHeight * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }
+      });
+      
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfHeight = (element.clientHeight * scale * pdfWidth) / (element.clientWidth * scale);
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`receipt-${receipt.receipt_number}.pdf`);
