@@ -100,8 +100,8 @@ export async function PATCH(req: NextRequest) {
     rpcName = 'po_ship_goods'
   } else if (new_status === 'money_released') {
     rpcName = 'po_release_payment'
-    rpcParams.p_bank_name = bank_name
-    rpcParams.p_screenshot_url = payment_screenshot_url
+    rpcParams.p_bank_name = bank_name || null
+    rpcParams.p_screenshot_url = payment_screenshot_url || null
   } else if (role === 'whole_manager' && new_status === 'pending_payer') {
     rpcName = 'po_approve_payment'
   } else if (new_status === 'pending_purchaser_sign' || new_status === 'pending_ceo_formal_paper' || (new_status === 'pending_whole_manager_payment' || new_status === 'pending_payer')) {
