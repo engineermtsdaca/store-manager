@@ -2314,6 +2314,10 @@ export default function CappadociaApp() {
                                                             </div>
                                                             <h4 className="font-extrabold text-sm">{req.item} ({req.qty} units)</h4>
                                                             <button disabled={processingItems.has(`sk-signoff-${req.id}`)} onClick={() => withProcessing(`sk-signoff-${req.id}`, async () => handleStoreKeeperSignoff(req.id))} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-xs">{processingItems.has(`sk-signoff-${req.id}`) ? 'Processing...' : 'Confirm Handover'}</button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         <div className="space-y-4 max-w-2xl mx-auto pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
                                             <div className="border-b pb-3">
                                                 <h3 className="font-extrabold text-base">Receive Bought Materials</h3>
@@ -2332,10 +2336,6 @@ export default function CappadociaApp() {
                                                 }}
                                             />
                                         </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
                                         </div>
                                     )}
 
