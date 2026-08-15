@@ -1972,29 +1972,7 @@ export default function CappadociaApp() {
                                     )}
 
 
-                                    {/* ★ PO WORKFLOW — Full out-of-stock purchase workflow overlay (all roles) */}
-                                    {activeOverlay === 'po_workflow' && user && (
-                                        <div className="space-y-2">
-                                            <p className="text-xs text-slate-400 font-semibold">
-                                                {language === 'am'
-                                                    ? `${user.nameAm} — ሚና: ${user.role}`
-                                                    : `${user.nameEn} — Role: ${user.role}`}
-                                            </p>
-                                            <PurchaseOrderWorkflow
-                                                user={user}
-                                                purchases={purchases}
-                                                updateStatus={updatePOStatus}
-                                                language={language}
-                                                generateReceipt={generateReceipt}
-                                                refresh={refreshOrders}
-                                                clearMessages={(actionKey: string, referenceId?: string) => {
-                                                    systemMessages
-                                                        .filter(m => (m as any).action_key === actionKey && (!referenceId || (m as any).reference_id === referenceId))
-                                                        .forEach(m => dismissMsg(m.id));
-                                                }}
-                                            />
-                                        </div>
-                                    )}
+
 
                                     {/* D2: Finance Transfer Audit */}
                                     {activeOverlay === 'finance_transfers' && (
