@@ -232,7 +232,7 @@ export default function PurchaseOrderWorkflow({
         else if (role === 'ceo') nextStatus = 'pending_purchaser_proforma';
 
         await updateStatus(p.id, nextStatus);
-        if (generateReceipt) await generateReceipt('PO Request Approval', { poNumber: p.po_number, by: role, nextStatus }, null);
+        if (generateReceipt) await generateReceipt('PO Request Approval', { poNumber: p.po_number, by: role, nextStatus }, p.site_id);
         
         if (clearMessages) {
             if (role === 'manager' || role === 'whole_manager') clearMessages('manager_approvals');
@@ -243,7 +243,7 @@ export default function PurchaseOrderWorkflow({
     const handleReqReject = async (p: any) => {
         // Rejection cancels the PO — mark as 'blocked_mismatch' (existing terminal status)
         await updateStatus(p.id, 'blocked_mismatch');
-        if (generateReceipt) await generateReceipt('PO Request Rejected', { poNumber: p.po_number, by: role }, null);
+        if (generateReceipt) await generateReceipt('PO Request Rejected', { poNumber: p.po_number, by: role }, p.site_id);
         
         if (clearMessages) {
             if (role === 'manager' || role === 'whole_manager') clearMessages('manager_approvals');
@@ -253,7 +253,7 @@ export default function PurchaseOrderWorkflow({
 
     const handleProformaAttach = async (p: any) => {
         await updateStatus(p.id, 'pending_site_manager_prof', { proforma_attached: true });
-        if (generateReceipt) await generateReceipt('PO Proforma Attached', { poNumber: p.po_number }, null);
+        if (generateReceipt) await generateReceipt('PO Proforma Attached', { poNumber: p.po_number }, p.site_id);
         if (clearMessages) clearMessages('purchaser_request');
     };
 
@@ -264,7 +264,7 @@ export default function PurchaseOrderWorkflow({
         else if (role === 'ceo') nextStatus = 'pending_pa_formal_paper';
 
         await updateStatus(p.id, nextStatus);
-        if (generateReceipt) await generateReceipt('PO Proforma Approved', { poNumber: p.po_number, by: role, nextStatus }, null);
+        if (generateReceipt) await generateReceipt('PO Proforma Approved', { poNumber: p.po_number, by: role, nextStatus }, p.site_id);
         if (clearMessages) {
             if (role === 'manager' || role === 'whole_manager') clearMessages('manager_approvals');
             if (role === 'ceo') clearMessages('ceo_approvals');
@@ -274,7 +274,7 @@ export default function PurchaseOrderWorkflow({
     const handleProfReject = async (p: any) => {
         // Return to purchaser for new proforma
         await updateStatus(p.id, 'pending_purchaser_proforma', { action: 'reject' });
-        if (generateReceipt) await generateReceipt('PO Proforma Rejected - Back to Purchaser', { poNumber: p.po_number, by: role }, null);
+        if (generateReceipt) await generateReceipt('PO Proforma Rejected - Back to Purchaser', { poNumber: p.po_number, by: role }, p.site_id);
         if (clearMessages) {
             if (role === 'manager' || role === 'whole_manager') clearMessages('manager_approvals');
             if (role === 'ceo') clearMessages('ceo_approvals');
@@ -284,14 +284,14 @@ export default function PurchaseOrderWorkflow({
     const handlePASign = async (p: any) => {
         // Bisrat prepares + signs → goes to Alemu to sign
         await updateStatus(p.id, 'pending_purchaser_sign', { pa_signed: true });
-        if (generateReceipt) await generateReceipt('PO Formal Paper - PA Signed', { poNumber: p.po_number, by: 'Bisrat (PA)' }, null);
+        if (generateReceipt) await generateReceipt('PO Formal Paper - PA Signed', { poNumber: p.po_number, by: 'Bisrat (PA)' }, p.site_id);
         if (clearMessages) clearMessages('pa_formal_paper');
     };
 
     const handlePurchaserSign = async (p: any) => {
         // Alemu signs → goes to CEO for final signature
         await updateStatus(p.id, 'pending_ceo_formal_paper', { purchaser_signed: true });
-        if (generateReceipt) await generateReceipt('PO Formal Paper - Purchaser Signed', { poNumber: p.po_number, by: 'Alemu (Purchaser)' }, null);
+        if (generateReceipt) await generateReceipt('PO Formal Paper - Purchaser Signed', { poNumber: p.po_number, by: 'Alemu (Purchaser)' }, p.site_id);
     };
 
     const handleCEOSign = async (p: any) => {
@@ -302,14 +302,14 @@ export default function PurchaseOrderWorkflow({
             : 'pending_payer';
 
         await updateStatus(p.id, nextStatus, { ceo_signed: true });
-        if (generateReceipt) await generateReceipt('PO Formal Paper - CEO Signed', { poNumber: p.po_number, by: 'CEO', nextStatus }, null);
+        if (generateReceipt) await generateReceipt('PO Formal Paper - CEO Signed', { poNumber: p.po_number, by: 'CEO', nextStatus }, p.site_id);
         if (clearMessages) clearMessages('ceo_approvals');
     };
 
     const handlePaymentApprove = async (p: any) => {
         // Abel approves → Seble (payer) gets notified
         await updateStatus(p.id, 'pending_payer');
-        if (generateReceipt) await generateReceipt('PO Payment Approved by Whole Manager', { poNumber: p.po_number }, null);
+        if (generateReceipt) await generateReceipt('PO Payment Approved by Whole Manager', { poNumber: p.po_number }, p.site_id);
         if (clearMessages) clearMessages('manager_approvals');
     };
 
@@ -318,14 +318,14 @@ export default function PurchaseOrderWorkflow({
         // 1. Purchaser notified "it is paid" → they ship
         // 2. Finance notified for receipt/audit
         await updateStatus(p.id, 'money_released');
-        if (generateReceipt) await generateReceipt('PO Payment Released by Payer', { poNumber: p.po_number, payer: user.nameEn }, null);
+        if (generateReceipt) await generateReceipt('PO Payment Released by Payer', { poNumber: p.po_number, payer: user.nameEn }, p.site_id);
         if (clearMessages) clearMessages('payer_release');
     };
 
     const handlePurchaserShip = async (p: any) => {
         // Purchaser ships goods → SK notified
         await updateStatus(p.id, 'shipped');
-        if (generateReceipt) await generateReceipt('PO Goods Shipped to Site', { poNumber: p.po_number, by: 'Alemu (Purchaser)' }, null);
+        if (generateReceipt) await generateReceipt('PO Goods Shipped to Site', { poNumber: p.po_number, by: 'Alemu (Purchaser)' }, p.site_id);
         if (clearMessages) clearMessages('purchaser_ship_notice');
     };
 

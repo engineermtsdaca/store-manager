@@ -136,7 +136,7 @@ export async function PATCH(req: NextRequest) {
   } else if (new_status === 'pending_site_manager_prof') {
     rpcName = 'po_attach_proforma'
     rpcParams.p_url = proforma_url || 'attached'
-  } else if (new_status === 'pending_whole_manager_req' || new_status === 'pending_ceo_req' || new_status === 'pending_purchaser_proforma') {
+  } else if (new_status === 'pending_whole_manager_req' || new_status === 'pending_ceo_req' || (new_status === 'pending_purchaser_proforma' && action !== 'reject')) {
     rpcName = 'po_authorize_request'
     rpcParams.p_role = role
   } else if (new_status === 'blocked_mismatch' || (action === 'reject' && new_status === 'pending_purchaser_proforma')) {
