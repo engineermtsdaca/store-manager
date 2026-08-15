@@ -4,6 +4,40 @@ import { useState } from 'react';
 import domtoimage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
 
+const actionTranslations: Record<string, string> = {
+  'PO Request Approval': 'የግዢ ጥያቄ ማጽደቅ',
+  'PO Request Rejected': 'የግዢ ጥያቄ ውድቅ ተደርጓል',
+  'PO Proforma Attached': 'ፕሮፎርማ ተያይዟል',
+  'PO Proforma Approved': 'ፕሮፎርማ ጸድቋል',
+  'PO Proforma Rejected - Back to Purchaser': 'ፕሮፎርማ ውድቅ ተደርጓል - ወደ ገዢ ተመልሷል',
+  'PO Formal Paper - PA Signed': 'ፎርማል ወረቀት - በረዳት ጸድቋል',
+  'PO Formal Paper - Purchaser Signed': 'ፎርማል ወረቀት - በገዢ ጸድቋል',
+  'PO Formal Paper - CEO Signed': 'ፎርማል ወረቀት - በዋና ስራ አስኪያጅ ጸድቋል',
+  'PO Payment Approved by Whole Manager': 'ክፍያ በዋና ስራ አስኪያጅ ጸድቋል',
+  'PO Payment Released by Payer': 'ክፍያ ተፈጽሟል',
+  'PO Goods Shipped to Site': 'እቃዎች ወደ ሳይት ተልከዋል',
+  'SK Confirmed Receipt of Bought Material': 'የተገዛ እቃ ርክክብ ማረጋገጫ',
+  'SK Issued Bought Material to Subcontractor': 'የተገዛ እቃ ለንዑስ ተቋራጭ ተሰጥቷል',
+  'Petty Cash Expense': 'የጥቃቅን ወጪ',
+  'Inventory Addition': 'የእቃ ገቢ',
+  'Material Transfer Request': 'የእቃ ዝውውር ጥያቄ',
+  'Transfer Approved': 'የዝውውር ማጽደቅ',
+  'Transfer Rejected': 'የዝውውር ውድቅ ማረጋገጫ',
+  'Transfer Verification': 'የዝውውር ማረጋገጫ',
+  'Subcontractor Request': 'የንዑስ ተቋራጭ ጥያቄ',
+  'Engineer Material Review': 'የመሃንዲስ እቃ ግምገማ',
+  'Engineer Material Review Partial': 'የመሃንዲስ እቃ ግምገማ (በከፊል)',
+  'Storekeeper Material Handover': 'የእቃ ርክክብ',
+  'Wastage Report': 'የብክነት ሪፖርት',
+  'Material Usage': 'የእቃ አጠቃቀም',
+  'Material Return Request': 'የእቃ ምላሽ ጥያቄ',
+  'Material Return Approved': 'የእቃ ምላሽ ጸድቋል',
+  'PO Payment Proof Attached': 'የክፍያ ማረጋገጫ ተያይዟል',
+  'Finance PO Verification': 'የፋይናንስ ግዢ ማረጋገጫ',
+  'Petty Cash Replenishment': 'የጥቃቅን ገንዘብ ምትክ',
+  'Petty Cash Audit': 'የጥቃቅን ገንዘብ ኦዲት',
+};
+
 interface ReceiptModalProps {
   receipt: Receipt | null;
   onClose: () => void;
@@ -62,23 +96,26 @@ export default function ReceiptModal({ receipt, onClose, language }: ReceiptModa
             <h1 className="text-2xl font-black uppercase tracking-widest text-slate-900 print:text-black">
               Cappadocia Realestate
             </h1>
-            <p className="text-sm font-bold text-slate-500 mt-1 print:text-black">Official System Receipt</p>
+            <p className="text-sm font-bold text-slate-500 mt-1 print:text-black">Official System Receipt / ህጋዊ የስርዓት ደረሰኝ</p>
           </div>
 
           <div className="flex justify-between items-center mb-8">
             <div>
-              <p className="text-xs text-slate-500 uppercase font-bold print:text-black">Receipt No.</p>
+              <p className="text-xs text-slate-500 uppercase font-bold print:text-black">Receipt No. / የደረሰኝ ቁጥር</p>
               <p className="text-lg font-extrabold font-mono">{receipt.receipt_number}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-500 uppercase font-bold print:text-black">Date</p>
+              <p className="text-xs text-slate-500 uppercase font-bold print:text-black">Date / ቀን</p>
               <p className="text-sm font-bold">{new Date(receipt.created_at).toLocaleString()}</p>
             </div>
           </div>
 
           <div className="bg-slate-50 rounded-xl p-5 mb-8 print:bg-transparent print:border print:border-black">
-            <h3 className="text-xs text-slate-500 uppercase font-bold mb-3 print:text-black">Action Details</h3>
-            <p className="text-lg font-black text-blue-600 mb-4 print:text-black">{receipt.action_type}</p>
+            <h3 className="text-xs text-slate-500 uppercase font-bold mb-3 print:text-black">Action Details / የድርጊት ዝርዝሮች</h3>
+            <p className="text-lg font-black text-blue-600 mb-4 print:text-black">
+              {receipt.action_type}
+              {actionTranslations[receipt.action_type] ? ` / ${actionTranslations[receipt.action_type]}` : ''}
+            </p>
             
             <div className="space-y-2 text-sm">
               {Object.entries(receipt.details).map(([key, value]) => (
@@ -92,16 +129,16 @@ export default function ReceiptModal({ receipt, onClose, language }: ReceiptModa
 
           <div className="flex justify-between items-end border-t-2 border-slate-200 pt-6 mt-6 print:border-black">
             <div>
-              <p className="text-[10px] text-slate-400 uppercase font-bold print:text-black">Authorized By</p>
+              <p className="text-[10px] text-slate-400 uppercase font-bold print:text-black">Authorized By / አረጋጋጭ</p>
               {receipt.user_profiles?.signature_url && (
                 <img src={receipt.user_profiles.signature_url} alt="Signature" className="h-10 my-1 object-contain mix-blend-multiply print:grayscale" />
               )}
-              <p className="text-sm font-bold">{receipt.user_profiles?.name_en || 'System User'}</p>
+              <p className="text-sm font-bold">{receipt.user_profiles?.name_en || 'System User (የስርዓት ተጠቃሚ)'}</p>
               <p className="text-xs text-slate-500 capitalize">{receipt.user_profiles?.role || 'User'}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-slate-400 uppercase font-bold print:text-black">Site / Location</p>
-              <p className="text-sm font-bold">{receipt.sites?.name || 'Head Office'}</p>
+              <p className="text-[10px] text-slate-400 uppercase font-bold print:text-black">Site / Location / ቦታ</p>
+              <p className="text-sm font-bold">{receipt.sites?.name || 'Head Office (ዋና መስሪያ ቤት)'}</p>
             </div>
           </div>
         </div>
