@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -1286,11 +1286,6 @@ export default function CappadociaApp() {
                                         <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         {renderText('የዋጋ ማወዳደሪያ ፕሮፎርማ ማሰባሰቢያ', '1. Gather supplier proformas')}
                                     </div>
-                                    <div onClick={() => setActiveOverlay('purchaser_ship')} className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}>
-                                        <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        {renderText('የገንዘብ ማረጋገጫና ዕቃ መላኪያ', '2. Execute purchases &amp; Ship')}
-                                    </div>
-                                </>
                             )}
 
                             {/* MANAGER BUTTONS */}
@@ -1809,27 +1804,6 @@ export default function CappadociaApp() {
 
 
 
-                                    {/* B2: Purchaser - Buy & Ship */}
-                                    {activeOverlay === 'purchaser_ship' && (
-                                        <div className="space-y-4 max-w-xl mx-auto">
-                                            <h3 className="font-extrabold text-base border-b pb-2">{language === 'am' ? 'የተለቀቁ ግዢዎች እና መላኪያ' : 'Released Purchases &amp; Shipping'}</h3>
-                                            {purchases.filter(p => p.status === 'money_released').length === 0 ? (
-                                                <p className="text-xs text-[#A3AED0] italic py-8 text-center">ባንክ ስክሪንሾት ከተላከ በኋላ ተገኝ የሆነ የግዢ ጥያቄ የለም (Ready for shipping)...</p>
-                                            ) : null}
-                                            {purchases.map(p => p.status === 'money_released' && (
-                                                <div key={p.id} className="p-4 border border-blue-200 rounded-xl bg-blue-50/50 space-y-3">
-                                                    <div className="flex justify-between text-xs font-bold text-blue-900">
-                                                        <span>{p.site}</span>
-                                                        <span>{p.financeAudited ? 'Audited' : 'Release confirmed'}</span>
-                                                    </div>
-                                                    <h4 className="font-extrabold text-sm text-blue-950">{p.item} ({p.qty} units)</h4>
-                                                    <p className="text-[11px] text-slate-600 font-mono">ባንክ: {p.bankName}</p>
-                                                    <p className="text-[11px] font-bold text-[#422AFB]">ማስተላለፊያ: {p.bankRef}</p>
-                                                    <button onClick={() => updateStatus(p.id, 'shipped')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-xs font-bold transition">{language === 'am' ? 'እቃውን ወደ ሳይት ላክ' : 'Mark as Shipped'}</button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
 
                                     {/* C1: Manager Transfer Approvals */}
                                     {activeOverlay === 'manager_transfers' && (

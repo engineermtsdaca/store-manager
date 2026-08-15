@@ -154,6 +154,14 @@ export default function PurchaseOrderWorkflow({
                 <p className="text-white font-bold text-lg">{p.qty}x {p.item}</p>
                 <p className="text-sm text-slate-300">Site: {p.sites?.name || p.site_id}</p>
                 <p className="text-xs text-slate-400 mt-1">Company: {p.company}</p>
+                {p.bank_name && (
+                    <p className="text-xs text-blue-300 mt-2 font-semibold">Bank: {p.bank_name}</p>
+                )}
+                {p.payment_screenshot_url && (
+                    <a href={p.payment_screenshot_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline block mt-1">
+                        {lang ? 'የክፍያ ማረጋገጫ ይመልከቱ' : 'View Payment Proof'}
+                    </a>
+                )}
                 {isUpload && (
                     <div className="mt-3 bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
                         <label className="block text-xs font-semibold text-slate-300 mb-2">{lang ? uploadLabelAm : uploadLabel}</label>
