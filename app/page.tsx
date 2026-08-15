@@ -1971,8 +1971,32 @@ export default function CappadociaApp() {
                                         </div>
                                     )}
 
-
-
+                                    {/* ★ PO WORKFLOW */}
+                                    {activeOverlay === 'po_workflow' && user && (
+                                        <div className="space-y-4 w-full mx-auto">
+                                            <div className="border-b pb-3">
+                                                <h3 className="font-extrabold text-base">{language === 'am' ? 'የግዢ ሂደት መቆጣጠሪያ' : 'Purchase Order Workflow'}</h3>
+                                                <p className="text-xs text-[#A3AED0] mt-1">
+                                                {language === 'am'
+                                                    ? `${user.nameAm} — ሚና: ${user.role}`
+                                                    : `${user.nameEn} — Role: ${user.role}`}
+                                                </p>
+                                            </div>
+                                            <PurchaseOrderWorkflow
+                                                user={user}
+                                                purchases={purchases}
+                                                updateStatus={updatePOStatus}
+                                                language={language}
+                                                generateReceipt={generateReceipt}
+                                                refresh={refreshOrders}
+                                                clearMessages={(actionKey: string, referenceId?: string) => {
+                                                    systemMessages
+                                                        .filter(m => (m as any).action_key === actionKey && (!referenceId || (m as any).reference_id === referenceId))
+                                                        .forEach(m => dismissMsg(m.id));
+                                                }}
+                                            />
+                                        </div>
+                                    )}
 
                                     {/* D2: Finance Transfer Audit */}
                                     {activeOverlay === 'finance_transfers' && (
@@ -2114,22 +2138,6 @@ export default function CappadociaApp() {
 
                                                                         {/* M1: Maintenance Sync Queue */}
                         
-            {activeOverlay === 'po_workflow' && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-slate-700 w-full max-w-5xl max-h-[90vh] rounded-3xl p-6 overflow-y-auto shadow-2xl relative">
-                        <button onClick={() => setActiveOverlay(null)} className="absolute top-6 right-6 text-slate-400 hover:text-white">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                        <h2 className="text-2xl font-bold text-white mb-6">{language === 'am' ? 'የግዢ ሂደት መቆጣጠሪያ' : 'Purchase Order Workflow'}</h2>
-                        <PurchaseOrderWorkflow user={user} purchases={purchases} updateStatus={updatePOStatus} language={language} generateReceipt={generateReceipt} refresh={refreshOrders} clearMessages={(actionKey: string, referenceId?: string) => {
-                            systemMessages
-                                .filter(m => (m as any).action_key === actionKey && (!referenceId || (m as any).reference_id === referenceId))
-                                .forEach(m => dismissMsg(m.id));
-                        }} />
-                    </div>
-                </div>
-            )}
-
 {/* F2: Subcontractor View Requests */}
                                     {activeOverlay === 'subcon_view' && (
                                         <div className="space-y-4 max-w-2xl mx-auto">
