@@ -1284,7 +1284,7 @@ export default function CappadociaApp() {
                                 <>
                                     <div onClick={() => setActiveOverlay('po_workflow')} className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}>
                                         <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        {renderText('የዋጋ ማወዳደሪያ ፕሮፎርማ ማሰባሰቢያ', '1. Gather supplier proformas')}
+                                        {renderText('የገዢ ተግባራት', 'Purchaser Tasks')}
                                     </div>
                                 </>
                             )}
