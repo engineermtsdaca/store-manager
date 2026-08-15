@@ -1146,13 +1146,13 @@ export default function CappadociaApp() {
                                 <>
                                     {/* Card 1: Storekeeper Signoff */}
                                     <div
-                                        onClick={() => setActiveOverlay('storekeeper_signoff')}
+                                        onClick={() => setActiveOverlay('sk_quick_tasks')}
                                         className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}
                                     >
                                         <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        {renderText('እቃ ማከፋፈያ', 'Sign-off Material Issues')}
+                                        {renderText('áˆáŒ£áŠ• á‰°áŒá‰£áˆ«á‰µ', 'Quick Tasks')}
                                     </div>
 
                                     {/* Card 2: Inventory Table */}
@@ -1232,23 +1232,6 @@ export default function CappadociaApp() {
                                         {renderText('የዕቃዎች ብልሽት መመዝገቢያ', 'Report Material Wastage')}
                                     </div>
 
-                                    {/* Card 8: Confirm Received Bought Materials (PO Workflow - SK step) */}
-                                    <div
-                                        onClick={() => setActiveOverlay('po_workflow')}
-                                        className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-teal-50 border-teal-100/80'}`}
-                                    >
-                                        <svg className="w-10 h-10 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        <div>
-                                            {renderText('ተገዝቶ የደረሰ እቃ ተቀበል', 'Confirm Received Bought Materials')}
-                                            {purchases.filter((p: any) => p.status === 'shipped' && (p.site === user.site || p.site_id === profile?.site_id)).length > 0 && (
-                                                <span className="block mt-1 text-xs font-bold text-teal-600">
-                                                    {purchases.filter((p: any) => p.status === 'shipped' && (p.site === user.site || p.site_id === profile?.site_id)).length} awaiting confirmation
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
                                 </>
                             )}
 
@@ -2314,7 +2297,7 @@ export default function CappadociaApp() {
                                     )}
 
                                     {/* H1: Storekeeper Sign-off */}
-                                    {activeOverlay === 'storekeeper_signoff' && (
+                                    {activeOverlay === 'sk_quick_tasks' && (
                                         <div className="space-y-4 max-w-2xl mx-auto">
                                             <div className="border-b pb-3">
                                                 <h3 className="font-extrabold text-base">Sign-off Material Issues (In Stock)</h3>
@@ -2331,6 +2314,24 @@ export default function CappadociaApp() {
                                                             </div>
                                                             <h4 className="font-extrabold text-sm">{req.item} ({req.qty} units)</h4>
                                                             <button disabled={processingItems.has(`sk-signoff-${req.id}`)} onClick={() => withProcessing(`sk-signoff-${req.id}`, async () => handleStoreKeeperSignoff(req.id))} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-xs">{processingItems.has(`sk-signoff-${req.id}`) ? 'Processing...' : 'Confirm Handover'}</button>
+                                        <div className="space-y-4 max-w-2xl mx-auto pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
+                                            <div className="border-b pb-3">
+                                                <h3 className="font-extrabold text-base">Receive Bought Materials</h3>
+                                            </div>
+                                            <PurchaseOrderWorkflow
+                                                user={user}
+                                                purchases={purchases}
+                                                updateStatus={updatePOStatus}
+                                                language={language}
+                                                generateReceipt={generateReceipt}
+                                                refresh={refreshOrders}
+                                                clearMessages={(actionKey: string, referenceId?: string) => {
+                                                    systemMessages
+                                                        .filter(m => (m as any).action_key === actionKey && (!referenceId || (m as any).reference_id === referenceId))
+                                                        .forEach(m => dismissMsg(m.id));
+                                                }}
+                                            />
+                                        </div>
                                                         </div>
                                                     ))}
                                                 </div>
