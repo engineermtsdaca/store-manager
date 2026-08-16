@@ -243,6 +243,7 @@ export default function CappadociaApp() {
     const [inventoryItemUnit, setInventoryItemUnit] = useState('pcs');
     const [inventoryItemQty, setInventoryItemQty] = useState('');
     const [inventoryItemSource, setInventoryItemSource] = useState<'received' | 'bought'>('received');
+    const [inventoryItemSourceSite, setInventoryItemSourceSite] = useState('');
     const [transferItem, setTransferItem] = useState('');
     const [transferQty, setTransferQty] = useState('');
     const [transferDest, setTransferDest] = useState('');
@@ -504,15 +505,31 @@ export default function CappadociaApp() {
             alert(language === 'am' ? 'እባክዎ ሁሉንም መረጃዎች ያስገቡ (Please fill all fields)' : 'Please fill all fields');
             return;
         }
+        if (inventoryItemSource === 'received' && !inventoryItemSourceSite) {
+            alert(language === 'am' ? 'እባክዎ መጣበትን ሳይት ይምረጡ (Please select a site)' : 'Please select a site');
+            return;
+        }
         const qtyNum = parseFloat(inventoryItemQty);
         try {
             await addInventoryItem(inventoryItemName, inventoryItemUnit, qtyNum, inventoryItemSource);
-            await generateReceipt('Inventory Addition', { item: inventoryItemName, qty: qtyNum, unit: inventoryItemUnit, source: inventoryItemSource }, profile?.site_id ?? null);
+            
+            const receiptPayload: any = { item: inventoryItemName, qty: qtyNum, unit: inventoryItemUnit, source: inventoryItemSource };
+            if (inventoryItemSource === 'received') {
+                receiptPayload['from_site'] = inventoryItemSourceSite;
+            }
+            await generateReceipt('Inventory Addition', receiptPayload, profile?.site_id ?? null);
+            
             setInventoryItemName('');
             setInventoryItemUnit('pcs');
             setInventoryItemQty('');
             setInventoryItemSource('received');
-            addSystemMessage('Inventory updated', `${inventoryItemName} was added to site inventory.`, 'inventory_add', { role: 'whole_manager' });
+            setInventoryItemSourceSite('');
+            
+            let successMsg = `${inventoryItemName} was added to site inventory.`;
+            if (inventoryItemSource === 'received' && inventoryItemSourceSite) {
+                successMsg = `${inventoryItemName} was added to site inventory from ${inventoryItemSourceSite}.`;
+            }
+            addSystemMessage('Inventory updated', successMsg, 'inventory_add', { role: 'whole_manager' });
             await refreshInventory();
             setInventoryAction(null);
         } catch (err: any) {
@@ -1421,6 +1438,18 @@ export default function CappadociaApp() {
                                                             <option value="received">{language === 'am' ? 'የገባ (Received)' : 'Received'}</option>
                                                             <option value="bought">{language === 'am' ? 'የተገዛ (Bought)' : 'Bought'}</option>
                                                         </select>
+                                                        {inventoryItemSource === 'received' && (
+                                                            <select required value={inventoryItemSourceSite} onChange={e => setInventoryItemSourceSite(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                                <option value="">{language === 'am' ? 'ከየትኛው ሳይት? (From which site?)' : 'From which site? (ከየትኛው ሳይት?)'}</option>
+                                                                <option value="Lideta Site">Lideta Site</option>
+                                                                <option value="Meskel Flower Site">Meskel Flower Site</option>
+                                                                <option value="4 Kilo Site">4 Kilo Site</option>
+                                                                <option value="JFK Site">JFK Site</option>
+                                                                <option value="Bole Site">Bole Site</option>
+                                                                <option value="Summit Site">Summit Site</option>
+                                                                <option value="Senga Tera Site">Senga Tera Site</option>
+                                                            </select>
+                                                        )}
                                                         <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'አስገባ (Save Inventory)' : 'Save Inventory (አስገባ)')}</button>
                                                     </form>
                                                 </div>
@@ -1515,6 +1544,18 @@ export default function CappadociaApp() {
                                                                                         <option value="received">{language === 'am' ? 'ገቢ (Received)' : 'Received'}</option>
                                                                                         <option value="bought">{language === 'am' ? 'የተገዛ (Bought)' : 'Bought'}</option>
                                                                                     </select>
+                                                                                    {inventoryItemSource === 'received' && (
+                                                                                        <select required value={inventoryItemSourceSite} onChange={e => setInventoryItemSourceSite(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                                                            <option value="">{language === 'am' ? 'ከየትኛው ሳይት? (From which site?)' : 'From which site? (ከየትኛው ሳይት?)'}</option>
+                                                                                            <option value="Lideta Site">Lideta Site</option>
+                                                                                            <option value="Meskel Flower Site">Meskel Flower Site</option>
+                                                                                            <option value="4 Kilo Site">4 Kilo Site</option>
+                                                                                            <option value="JFK Site">JFK Site</option>
+                                                                                            <option value="Bole Site">Bole Site</option>
+                                                                                            <option value="Summit Site">Summit Site</option>
+                                                                                            <option value="Senga Tera Site">Senga Tera Site</option>
+                                                                                        </select>
+                                                                                    )}
                                                                                     <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'መዝግብ (Save)' : 'Save (መዝግብ)')}</button>
                                                                                 </form>
                                                                             </div>
