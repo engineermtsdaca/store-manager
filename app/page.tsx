@@ -97,16 +97,20 @@ export default function CappadociaApp() {
     const { workers: dbWorkers, attendanceSubmitted, toggleWorker: dbToggleWorker, submitAttendance: dbSubmitAttendance, refresh: refreshAttendance } = useAttendance(profile?.site_id ?? null);
 
     // --- LOCAL UI ADAPTORS (maps DB types to local UI shape) ---
-    // Inventory: DB uses temp_store, UI uses tempStore
     const friendshipInventoryUI: InventoryItem[] = friendshipInventory.map(i => {
         const reservedQty = materialRequests
             .filter(req => req.status === 'approved_instock' && req.item === i.name && (req.site_id === i.site_id || req.site === (i as any).sites?.name))
             .reduce((sum, req) => sum + req.qty, 0);
 
+        const pendingTransferQty = dbTransfers
+            .filter(tr => (tr.status === 'pending_manager' || tr.status === 'pending_finance') && tr.item_name === i.name)
+            .reduce((sum, tr) => sum + tr.qty, 0);
+
         return { 
             ...i, 
             tempStore: (i as any).temp_store ?? 0,
-            remained: i.remained - reservedQty
+            remained: i.remained - reservedQty - pendingTransferQty,
+            transferred: i.transferred + pendingTransferQty
         };
     });
     // Transfers: map DB MaterialTransfer → UI TransferLog
@@ -251,6 +255,9 @@ export default function CappadociaApp() {
     const [wastageQty, setWastageQty] = useState('');
     const [wastageReason, setWastageReason] = useState('');
     const [wastagePhotoName, setWastagePhotoName] = useState('');
+    const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
+    const [inventoryAction, setInventoryAction] = useState<'transfer' | 'used' | 'damage' | 'add_new' | null>(null);
+    const [usageUsedBy, setUsageUsedBy] = useState('');
     
     // --- GLOBAL UI LOCK STATE ---
     const [processingItems, setProcessingItems] = useState<Set<string>>(new Set());
@@ -493,7 +500,10 @@ export default function CappadociaApp() {
 
     const handleAddInventoryItem = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inventoryItemName || !inventoryItemUnit || !inventoryItemQty) return;
+        if (!inventoryItemName || !inventoryItemUnit || !inventoryItemQty) {
+            alert(language === 'am' ? 'እባክዎ ሁሉንም መረጃዎች ያስገቡ (Please fill all fields)' : 'Please fill all fields');
+            return;
+        }
         const qtyNum = parseFloat(inventoryItemQty);
         try {
             await addInventoryItem(inventoryItemName, inventoryItemUnit, qtyNum, inventoryItemSource);
@@ -504,7 +514,7 @@ export default function CappadociaApp() {
             setInventoryItemSource('received');
             addSystemMessage('Inventory updated', `${inventoryItemName} was added to site inventory.`, 'inventory_add', { role: 'whole_manager' });
             await refreshInventory();
-            setActiveOverlay(null);
+            setInventoryAction(null);
         } catch (err: any) {
             console.error(err.message);
             if (err.message === 'Unauthorized' || err.message?.includes('Unauthorized')) {
@@ -518,7 +528,10 @@ export default function CappadociaApp() {
 
     const handleMaterialTransfer = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!transferItem || !transferQty || !transferDest) return;
+        if (!transferItem || !transferQty || !transferDest) {
+            alert(language === 'am' ? 'እባክዎ ሁሉንም መረጃዎች ያስገቡ (Please fill all fields)' : 'Please fill all fields');
+            return;
+        }
         const qtyNum = parseFloat(transferQty);
 
         const currentStock = friendshipInventoryUI.find(i => i.name === transferItem);
@@ -542,7 +555,8 @@ export default function CappadociaApp() {
             addSystemMessage('Transfer requested', `${transferItem} to ${transferDest} is waiting for manager review.`, 'transfer_review', { role: 'whole_manager' });
             await refreshTransfers();
             await refreshInventory();
-            setActiveOverlay(null);
+            setSelectedInventoryItem(null);
+            setInventoryAction(null);
         } catch (err: any) {
             alert(err.message);
         }
@@ -567,7 +581,7 @@ export default function CappadociaApp() {
                         : `${transferRecord.item} for ${transferRecord.destination} moved to finance verification.`,
                     'transfer_review',
                     wasReturned
-                        ? { role: 'storekeeper', site: 'Friendship Site' }
+                        ? { role: 'storekeeper', site: (user?.site || 'Friendship Site') }
                         : { role: 'finance', company: 'Cappadocia' }
                 );
             }
@@ -580,7 +594,7 @@ export default function CappadociaApp() {
         if (!transferRecord) return;
         try {
             await transferFinanceVerify(transferId);
-            addSystemMessage('Transfer verified', `${transferRecord.item} balance was verified and the transfer was completed.`, 'transfer_verify', { role: 'storekeeper', site: 'Friendship Site' });
+            addSystemMessage('Transfer verified', `${transferRecord.item} balance was verified and the transfer was completed.`, 'transfer_verify', { role: 'storekeeper', site: (user?.site || 'Friendship Site') });
             await refreshTransfers();
             await refreshInventory();
             await generateReceipt('Transfer Verification', { 
@@ -600,7 +614,7 @@ export default function CappadociaApp() {
         try {
             await createPO({
                 site_id: profile?.site_id ?? '',
-                company: user?.company ?? getCompanyForSite(user?.site || 'Friendship Site'),
+                company: user?.company ?? getCompanyForSite(user?.site || (user?.site || 'Friendship Site')),
                 item: reqItemName,
                 qty: qtyNum,
                 estimated_price: qtyNum * 1200,
@@ -802,7 +816,10 @@ export default function CappadociaApp() {
 
     const handleWastageLog = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!wastageItem || !wastageQty || !wastageReason) return;
+        if (!wastageItem || !wastageQty || !wastageReason) {
+            alert(language === 'am' ? 'እባክዎ ሁሉንም መረጃዎች ያስገቡ (Please fill all fields)' : 'Please fill all fields');
+            return;
+        }
         const qtyNum = parseFloat(wastageQty);
 
         const currentStock = friendshipInventoryUI.find(i => i.name === wastageItem);
@@ -831,7 +848,8 @@ export default function CappadociaApp() {
             addSystemMessage('Wastage reported', `${wastageItem} was reported by ${user?.role === 'engineer' ? 'site engineer' : 'storekeeper'} for manager review.`, 'wastage_review', { role: 'whole_manager' });
             await refreshWastage();
             await refreshInventory();
-            setActiveOverlay(null);
+            setSelectedInventoryItem(null);
+            setInventoryAction(null);
         } catch (err: any) {
             alert(err.message);
         }
@@ -839,7 +857,10 @@ export default function CappadociaApp() {
 
     const handleUsageLog = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!usageItem || !usageQty) return;
+        if (!usageItem || !usageQty || !usageUsedBy) {
+            alert(language === 'am' ? 'እባክዎ ሁሉንም መረጃዎች ያስገቡ (Please fill all fields)' : 'Please fill all fields');
+            return;
+        }
         const qtyNum = parseFloat(usageQty);
 
         const currentStock = friendshipInventoryUI.find(i => i.name === usageItem);
@@ -851,12 +872,15 @@ export default function CappadociaApp() {
             await logInventoryUsage(currentStock.id, qtyNum);
             await generateReceipt('Material Usage', { 
                 Item: usageItem, 
-                Qty: qtyNum
+                Qty: qtyNum,
+                UsedBy: usageUsedBy
             }, profile?.site_id ?? null);
             setUsageQty('');
             setUsageItem('');
+            setUsageUsedBy('');
+            setSelectedInventoryItem(null);
+            setInventoryAction(null);
             await refreshInventory();
-            setActiveOverlay(null);
         } catch (err: any) {
             alert(err.message);
         }
@@ -992,7 +1016,7 @@ export default function CappadociaApp() {
             // System messages are generated by the backend API in /api/purchase-orders/route.ts
             await refreshOrders();
             if (newStatus === 'sk_received') {
-                await refreshFriendshipInventory();
+                await refreshInventory();
             }
         } catch (err: any) { alert(err.message); }
     };
@@ -1180,40 +1204,7 @@ export default function CappadociaApp() {
                                         {renderText('የሠራተኞች ዕለት መገኘት ሰነድ', 'Timekeeper Site Attendance')}
                                     </div>
 
-                                    {/* Card 3: Material request */}
-                                    <div
-                                        onClick={() => setActiveOverlay('inventory_add')}
-                                        className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}
-                                    >
-                                        <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        {renderText('ነባር እቃ ማስገቢያ', 'Add Existing Inventory')}
-                                    </div>
-
-                                    {/* Card 4: Transfer */}
-                                    <div
-                                        onClick={() => setActiveOverlay('transfer')}
-                                        className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}
-                                    >
-                                        <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                                        </svg>
-                                        {renderText('የግንባታ እቃዎች ማስተላለፊያ', 'Inter-Site Material Transfer')}
-                                    </div>
-
-                                    {/* Card 5: SIV Usage */}
-                                    <div
-                                        onClick={() => setActiveOverlay('usage')}
-                                        className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}
-                                    >
-                                        <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                        </svg>
-                                        {renderText('የዕለት ወጪ መመዝገቢያ (SIV)', 'Log Site Material Usage')}
-                                    </div>
-
-                                    {/* Card 6: Petty Cash Drawer */}
+                                    {/* Card 3: Petty Cash Drawer */}
                                     <div
                                         onClick={() => setActiveOverlay('pettycash')}
                                         className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}
@@ -1222,17 +1213,6 @@ export default function CappadociaApp() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                                         </svg>
                                         {renderText('የጥቃቅን ገንዘብ ወጪ መዝገብ', 'Petty Cash Ledger')}
-                                    </div>
-
-                                    {/* Card 7: Wastage damage logs */}
-                                    <div
-                                        onClick={() => setActiveOverlay('wastage')}
-                                        className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}
-                                    >
-                                        <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                        </svg>
-                                        {renderText('የዕቃዎች ብልሽት መመዝገቢያ', 'Report Material Wastage')}
                                     </div>
 
                                 </>
@@ -1402,16 +1382,51 @@ export default function CappadociaApp() {
                                     {/* A1: Inventory Overlay (7-Column Spreadsheet) */}
                                     {activeOverlay === 'inventory' && (
                                         <div className="space-y-4">
-                                            <div className="flex justify-between items-center border-b border-slate-200/20 pb-3">
-                                                <h3 className="text-lg font-black tracking-tight">{renderText('የዕቃዎች ክምችት ሁኔታ (ቀጥታ መረጃ)', 'Friendship Site Inventory Reconciliation')}</h3>
+                                            {/* Header with Add New Item button */}
+                                            <div className="flex flex-wrap justify-between items-center border-b border-slate-200/20 pb-3 gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setInventoryAction('add_new'); setSelectedInventoryItem(null); }}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                                        {language === 'am' ? 'አዲስ እቃ ጨምር (Add New Item)' : 'Add New Item (አዲስ እቃ ጨምር)'}
+                                                    </button>
+                                                    <h3 className="text-lg font-black tracking-tight">{renderText('የዕቃዎች ክምችት ሁኔታ', 'Site Inventory Levels')}</h3>
+                                                </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-[10px] bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold uppercase">ቀጥታ መረጃ (Live)</span>
-                                                    <button type="button" onClick={() => setActiveOverlay(null)} className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600'}`}>
+                                                    <button type="button" onClick={() => { setActiveOverlay(null); setSelectedInventoryItem(null); setInventoryAction(null); }} className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600'}`}>
                                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                         {language === 'am' ? 'ዝጋ' : 'Close'}
                                                     </button>
                                                 </div>
                                             </div>
+
+                                            {/* Add New Item form (shown at top when inventoryAction === 'add_new') */}
+                                            {inventoryAction === 'add_new' && (
+                                                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-blue-50 border-blue-200'}`}>
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <h4 className="font-extrabold text-sm">{language === 'am' ? 'ነባር እቃ ማስገቢያ (Add Existing Inventory)' : 'Add Existing Inventory (ነባር እቃ ማስገቢያ)'}</h4>
+                                                        <button type="button" onClick={() => setInventoryAction(null)} className="text-xs text-slate-400 hover:text-red-500 font-bold">✕</button>
+                                                    </div>
+                                                    <form onSubmit={(e) => { e.preventDefault(); withProcessing('global-form', async () => handleAddInventoryItem(e)); }} className="space-y-3">
+                                                        <input type="text" placeholder={language === 'am' ? 'የእቃ ስም' : 'Item name'} value={inventoryItemName} onChange={e => setInventoryItemName(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <input type="text" placeholder={language === 'am' ? 'የመለኪያ አይነት' : 'Unit e.g. pcs, bags'} value={inventoryItemUnit} onChange={e => setInventoryItemUnit(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                            <input type="number" placeholder={language === 'am' ? 'ብዛት' : 'Quantity'} value={inventoryItemQty} onChange={e => setInventoryItemQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                        </div>
+                                                        <select value={inventoryItemSource} onChange={e => setInventoryItemSource(e.target.value as 'received' | 'bought')} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                            <option value="received">{language === 'am' ? 'የገባ (Received)' : 'Received'}</option>
+                                                            <option value="bought">{language === 'am' ? 'የተገዛ (Bought)' : 'Bought'}</option>
+                                                        </select>
+                                                        <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'አስገባ (Save Inventory)' : 'Save Inventory (አስገባ)')}</button>
+                                                    </form>
+                                                </div>
+                                            )}
+
+                                            {/* Inventory Table */}
                                             <div className="overflow-x-auto text-xs">
                                                 <table className="w-full text-left border-collapse">
                                                     <thead>
@@ -1426,16 +1441,162 @@ export default function CappadociaApp() {
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100/10">
-                                                        {friendshipInventory.map(item => (
-                                                            <tr key={item.id} className="hover:bg-slate-50/5 transition-colors">
-                                                                <td className="py-4 font-extrabold">{item.name}</td>
-                                                                <td className="py-4 font-semibold text-slate-500">{item.received} {item.unit}</td>
-                                                                <td className="py-4 font-semibold text-slate-500">{item.bought} {item.unit}</td>
-                                                                <td className="py-4 font-semibold text-slate-500">{item.used} {item.unit}</td>
-                                                                <td className="py-4 font-semibold text-slate-400">{item.damaged} {item.unit}</td>
-                                                                <td className="py-4 font-semibold text-slate-400">{item.transferred} {item.unit}</td>
-                                                                <td className={`py-4 font-black text-center ${isDarkMode ? 'bg-[#1e293b]/50' : 'bg-[#F4F7FE]/60 text-[#422AFB]'}`}>{item.remained} {item.unit}</td>
-                                                            </tr>
+                                                        {friendshipInventoryUI.map(item => (
+                                                            <React.Fragment key={item.id}>
+                                                                <tr
+                                                                    className={`cursor-pointer transition-colors ${selectedInventoryItem?.id === item.id ? (isDarkMode ? 'bg-blue-900/30' : 'bg-blue-50') : 'hover:bg-slate-50/5'}`}
+                                                                    onClick={() => {
+                                                                        if (selectedInventoryItem?.id === item.id) {
+                                                                            setSelectedInventoryItem(null);
+                                                                            setInventoryAction(null);
+                                                                        } else {
+                                                                            setSelectedInventoryItem(item);
+                                                                            setInventoryAction(null);
+                                                                            setTransferItem(item.name);
+                                                                            setUsageItem(item.name);
+                                                                            setWastageItem(item.name);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <td className="py-4 font-extrabold">{item.name}</td>
+                                                                    <td className="py-4 font-semibold text-slate-500">{item.received} {item.unit}</td>
+                                                                    <td className="py-4 font-semibold text-slate-500">{item.bought} {item.unit}</td>
+                                                                    <td className="py-4 font-semibold text-slate-500">{item.used} {item.unit}</td>
+                                                                    <td className="py-4 font-semibold text-slate-400">{item.damaged} {item.unit}</td>
+                                                                    <td className="py-4 font-semibold text-slate-400">{item.transferred} {item.unit}</td>
+                                                                    <td className={`py-4 font-black text-center ${isDarkMode ? 'bg-[#1e293b]/50' : 'bg-[#F4F7FE]/60 text-[#422AFB]'}`}>{item.remained} {item.unit}</td>
+                                                                </tr>
+
+                                                                {/* Action buttons row - shown when this item is selected */}
+                                                                {selectedInventoryItem?.id === item.id && !inventoryAction && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="py-3">
+                                                                            <div className="flex flex-wrap gap-2 justify-center">
+                                                                                <button onClick={(e) => { e.stopPropagation(); setInventoryAction('transfer'); }} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all">
+                                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                                                                    {language === 'am' ? 'ማስተላለፍ (Transfer)' : 'Transfer (ማስተላለፍ)'}
+                                                                                </button>
+                                                                                <button onClick={(e) => { e.stopPropagation(); setInventoryAction('used'); }} className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all">
+                                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                                                                    {language === 'am' ? 'ጥቅም ላይ የዋለ (Used)' : 'Used (ጥቅም ላይ የዋለ)'}
+                                                                                </button>
+                                                                                <button onClick={(e) => { e.stopPropagation(); setInventoryAction('damage'); }} className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all">
+                                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                                                    {language === 'am' ? 'ብልሽት (Damage)' : 'Damage (ብልሽት)'}
+                                                                                </button>
+                                                                                <button onClick={(e) => { 
+                                                                                    e.stopPropagation(); 
+                                                                                    setInventoryItemName(item.name);
+                                                                                    setInventoryItemUnit(item.unit);
+                                                                                    setInventoryItemQty('');
+                                                                                    setInventoryItemSource('received');
+                                                                                    setInventoryAction('add_existing'); 
+                                                                                }} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all">
+                                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                                                                    {language === 'am' ? 'ነባር እቃ (Add Existing)' : 'Add Existing (ነባር እቃ)'}
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+
+                                                                {/* Add Existing form inline */}
+                                                                {selectedInventoryItem?.id === item.id && inventoryAction === 'add_existing' && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="py-3">
+                                                                            <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-blue-50 border-blue-200'}`}>
+                                                                                <div className="flex justify-between items-center mb-3">
+                                                                                    <h4 className="font-extrabold text-sm">{language === 'am' ? 'ነባር እቃ ማስገቢያ (Add Existing Inventory)' : 'Add Existing Inventory (ነባር እቃ ማስገቢያ)'} — {item.name}</h4>
+                                                                                    <button type="button" onClick={() => setInventoryAction(null)} className="text-xs text-slate-400 hover:text-red-500 font-bold">✕</button>
+                                                                                </div>
+                                                                                <form onSubmit={(e) => { e.preventDefault(); withProcessing('global-form', async () => handleAddInventoryItem(e)); }} className="space-y-3">
+                                                                                    <input required type="number" placeholder={language === 'am' ? 'ብዛት' : 'Quantity'} value={inventoryItemQty} onChange={e => setInventoryItemQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                                                    <select required value={inventoryItemSource} onChange={e => setInventoryItemSource(e.target.value as 'received' | 'bought')} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                                                        <option value="received">{language === 'am' ? 'ገቢ (Received)' : 'Received'}</option>
+                                                                                        <option value="bought">{language === 'am' ? 'የተገዛ (Bought)' : 'Bought'}</option>
+                                                                                    </select>
+                                                                                    <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'መዝግብ (Save)' : 'Save (መዝግብ)')}</button>
+                                                                                </form>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+
+                                                                {/* Transfer form inline */}
+                                                                {selectedInventoryItem?.id === item.id && inventoryAction === 'transfer' && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="py-3">
+                                                                            <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-indigo-50 border-indigo-200'}`}>
+                                                                                <div className="flex justify-between items-center mb-3">
+                                                                                    <h4 className="font-extrabold text-sm">{language === 'am' ? 'ማስተላለፍ (Transfer)' : 'Transfer (ማስተላለፍ)'} — {item.name} <span className="text-slate-400 font-normal">({item.remained} {item.unit} {language === 'am' ? 'ቀሪ (left)' : 'left (ቀሪ)'})</span></h4>
+                                                                                    <button type="button" onClick={() => setInventoryAction(null)} className="text-xs text-slate-400 hover:text-red-500 font-bold">✕</button>
+                                                                                </div>
+                                                                                <form onSubmit={(e) => { e.preventDefault(); withProcessing('global-form', async () => handleMaterialTransfer(e)); }} className="space-y-3">
+                                                                                    <select required value={transferType} onChange={e => setTransferType(e.target.value as 'intra' | 'inter')} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                                                        <option value="intra">{language === 'am' ? 'ኩባንያ ውስጥ ዝውውር (Intra-company)' : 'Intra-company transfer (ኩባንያ ውስጥ ዝውውር)'}</option>
+                                                                                        <option value="inter">{language === 'am' ? 'ኩባንያ ውጪ ዝውውር (Inter-company)' : 'Inter-company transfer (ኩባንያ ውጪ ዝውውር)'}</option>
+                                                                                    </select>
+                                                                                    <input required type="number" placeholder={language === 'am' ? 'ብዛት' : 'Quantity'} value={transferQty} onChange={e => setTransferQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                                                    <select required value={transferDest} onChange={e => setTransferDest(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                                                        <option value="">{language === 'am' ? 'የመድረሻ ሳይት ይምረጡ... (Select Destination)' : 'Select Destination... (የመድረሻ ሳይት)'}</option>
+                                                                                        <option value="Lideta Site">Lideta Site</option>
+                                                                                        <option value="Meskel Flower Site">Meskel Flower Site</option>
+                                                                                        <option value="4 Kilo Site">4 Kilo Site</option>
+                                                                                        <option value="JFK Site">JFK Site</option>
+                                                                                        <option value="Bole Site">Bole Site</option>
+                                                                                        <option value="Summit Site">Summit Site</option>
+                                                                                        <option value="Senga Tera Site">Senga Tera Site</option>
+                                                                                    </select>
+                                                                                    <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'አስተላልፍ (Execute Transfer)' : 'Execute Transfer (አስተላልፍ)')}</button>
+                                                                                </form>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+
+                                                                {/* Used form inline */}
+                                                                {selectedInventoryItem?.id === item.id && inventoryAction === 'used' && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="py-3">
+                                                                            <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-amber-50 border-amber-200'}`}>
+                                                                                <div className="flex justify-between items-center mb-3">
+                                                                                    <h4 className="font-extrabold text-sm">{language === 'am' ? 'ጥቅም ላይ የዋለ (Material Used)' : 'Material Used (ጥቅም ላይ የዋለ)'} — {item.name} <span className="text-slate-400 font-normal">({item.remained} {item.unit} {language === 'am' ? 'ቀሪ (left)' : 'left (ቀሪ)'})</span></h4>
+                                                                                    <button type="button" onClick={() => setInventoryAction(null)} className="text-xs text-slate-400 hover:text-red-500 font-bold">✕</button>
+                                                                                </div>
+                                                                                <form onSubmit={(e) => { e.preventDefault(); withProcessing('global-form', async () => handleUsageLog(e)); }} className="space-y-3">
+                                                                                    <input required type="text" placeholder={language === 'am' ? 'ማን ተጠቀመው? (ስም)' : 'Who used it? (Name)'} value={usageUsedBy} onChange={e => setUsageUsedBy(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                                                    <input required type="number" placeholder={language === 'am' ? 'የወጣው ብዛት' : 'Quantity Used'} value={usageQty} onChange={e => setUsageQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                                                    <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'ወጪ መዝግብ (Log Usage)' : 'Log Usage (ወጪ መዝግብ)')}</button>
+                                                                                </form>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+
+                                                                {/* Damage form inline */}
+                                                                {selectedInventoryItem?.id === item.id && inventoryAction === 'damage' && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="py-3">
+                                                                            <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-red-50 border-red-200'}`}>
+                                                                                <div className="flex justify-between items-center mb-3">
+                                                                                    <h4 className="font-extrabold text-sm">{language === 'am' ? 'ብልሽት መዝግብ (Report Damage)' : 'Report Damage (ብልሽት መዝግብ)'} — {item.name} <span className="text-slate-400 font-normal">({item.remained} {item.unit} {language === 'am' ? 'ቀሪ (left)' : 'left (ቀሪ)'})</span></h4>
+                                                                                    <button type="button" onClick={() => setInventoryAction(null)} className="text-xs text-slate-400 hover:text-red-500 font-bold">✕</button>
+                                                                                </div>
+                                                                                <form onSubmit={(e) => { e.preventDefault(); handleWastageLog(e); }} className="space-y-3">
+                                                                                    <input required type="number" placeholder={language === 'am' ? 'የተበላሸው ብዛት' : 'Quantity Damaged'} value={wastageQty} onChange={e => setWastageQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                                                    <input required type="text" placeholder={language === 'am' ? 'የብልሽቱ ምክንያት' : 'Reason for Damage'} value={wastageReason} onChange={e => setWastageReason(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`} />
+                                                                                    <label className={`block w-full text-xs p-3 border rounded-xl cursor-pointer ${isDarkMode ? 'bg-[#0f172a] text-white border-slate-700' : 'bg-white text-slate-800 border-slate-200'}`}>
+                                                                                        <span className="block font-bold">{language === 'am' ? 'ፎቶ ያያይዙ (Attach photo)' : 'Attach photo (ፎቶ ያያይዙ)'}</span>
+                                                                                        <input type="file" accept="image/*" className="hidden" onChange={e => setWastagePhotoName(e.target.files?.[0]?.name ?? '')} />
+                                                                                        <span className="block mt-1 text-[10px] text-slate-400 break-all">{wastagePhotoName || (language === 'am' ? 'ፎቶ አልተመረጠም' : 'No photo selected')}</span>
+                                                                                    </label>
+                                                                                    <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'ብልሽት መዝግብ (Log Damage)' : 'Log Damage (ብልሽት መዝግብ)')}</button>
+                                                                                </form>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </React.Fragment>
                                                         ))}
                                                     </tbody>
                                                 </table>
@@ -1549,71 +1710,6 @@ export default function CappadociaApp() {
                                         </div>
                                     )}
 
-                                    {/* A3b: Add Inventory */}
-                                    {activeOverlay === 'inventory_add' && (
-                                        <div className="max-w-md mx-auto space-y-4">
-                                            <h3 className="font-extrabold text-base border-b pb-3">{language === 'am' ? 'ነባር እቃ ማስገቢያ' : 'Add Existing Inventory'}</h3>
-                                            <form onSubmit={(e) => withProcessing('global-form', async () => handleAddInventoryItem(e))} className="space-y-3">
-                                                <input type="text" placeholder={language === 'am' ? 'የእቃ ስም' : 'Item name'} value={inventoryItemName} onChange={e => setInventoryItemName(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <input type="text" placeholder={language === 'am' ? 'የመለኪያ አይነት' : 'Unit e.g. pcs, bags'} value={inventoryItemUnit} onChange={e => setInventoryItemUnit(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <input type="number" placeholder={language === 'am' ? 'ብዛት' : 'Quantity'} value={inventoryItemQty} onChange={e => setInventoryItemQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <select value={inventoryItemSource} onChange={e => setInventoryItemSource(e.target.value as 'received' | 'bought')} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <option value="received">Received</option>
-                                                    <option value="bought">Bought</option>
-                                                </select>
-                                                <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : (language === 'am' ? 'አስገባ' : 'Save Inventory')} </button>
-                                            </form>
-                                        </div>
-                                    )}
-
-                                    {/* A4: Transfer Form */}
-                                    {activeOverlay === 'transfer' && (
-                                        <div className="max-w-md mx-auto space-y-4">
-                                            <h3 className="font-extrabold text-base border-b pb-3">{language === 'am' ? 'እቃዎችን ማስተላለፊያ' : 'Transfer Material'}</h3>
-                                            <form onSubmit={(e) => withProcessing('global-form', async () => handleMaterialTransfer(e))} className="space-y-3">
-                                                <select value={transferItem} onChange={e => setTransferItem(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <option value="">{language === 'am' ? 'የሚዘዋወር እቃ' : 'Select Item...'}</option>
-                                                    {friendshipInventory.map(item => (
-                                                        <option key={item.id} value={item.name}>{item.name} ({item.remained} left)</option>
-                                                    ))}
-                                                </select>
-                                                <select value={transferType} onChange={e => setTransferType(e.target.value as 'intra' | 'inter')} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <option value="intra">Intra-company transfer</option>
-                                                    <option value="inter">Inter-company transfer</option>
-                                                </select>
-                                                <input type="number" placeholder={language === 'am' ? 'ብዛት' : 'Quantity'} value={transferQty} onChange={e => setTransferQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <select value={transferDest} onChange={e => setTransferDest(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <option value="">{language === 'am' ? 'የመድረሻ ሳይት' : 'Select Destination...'}</option>
-                                                    <option value="Lideta Site">Lideta Site</option>
-                                                    <option value="Meskel Flower Site">Meskel Flower Site</option>
-                                                    <option value="4 Kilo Site">4 Kilo Site</option>
-                                                    <option value="JFK Site">JFK Site</option>
-                                                    <option value="Bole Site">Bole Site</option>
-                                                    <option value="Summit Site">Summit Site</option>
-                                                    <option value="Senga Tera Site">Senga Tera Site</option>
-                                                </select>
-                                                <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : 'አስተላልፍ (Execute Transfer)'}</button>
-                                            </form>
-                                        </div>
-                                    )}
-
-                                    {/* A5: SIV Usage */}
-                                    {activeOverlay === 'usage' && (
-                                        <div className="max-w-md mx-auto space-y-4">
-                                            <h3 className="font-extrabold text-base border-b pb-3">{language === 'am' ? 'የዕለት ወጪ መመዝገቢያ (SIV)' : 'Log Daily SIV'}</h3>
-                                            <form onSubmit={handleUsageLog} className="space-y-3">
-                                                <select value={usageItem} onChange={e => setUsageItem(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <option value="">{language === 'am' ? 'የወጣው ግንባታ እቃ' : 'Select Used Item...'}</option>
-                                                    {friendshipInventory.map(item => (
-                                                        <option key={item.id} value={item.name}>{item.name} ({item.remained} left)</option>
-                                                    ))}
-                                                </select>
-                                                <input type="number" placeholder={language === 'am' ? 'የወጣው ብዛት' : 'Quantity'} value={usageQty} onChange={e => setUsageQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-[#422AFB] hover:bg-[#331df4] text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : 'ወጪ መዝግብ (Log Usage)'}</button>
-                                            </form>
-                                        </div>
-                                    )}
-
                                     {/* A6: Petty cash drawer */}
                                     {activeOverlay === 'pettycash' && (
                                         <div className="max-w-md mx-auto space-y-4">
@@ -1625,29 +1721,6 @@ export default function CappadociaApp() {
                                                 <input type="text" placeholder={language === 'am' ? 'የወጪው ምክንያት' : 'Description'} value={newExpenseDesc} onChange={e => setNewExpenseDesc(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
                                                 <input type="number" placeholder={language === 'am' ? 'የወጪ መጠን' : 'Amount'} value={newExpenseAmount} onChange={e => setNewExpenseAmount(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
                                                 <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : 'መዝግብ (Log Expense)'}</button>
-                                            </form>
-                                        </div>
-                                    )}
-
-                                    {/* A7: Wastage Form */}
-                                    {activeOverlay === 'wastage' && (
-                                        <div className="max-w-md mx-auto space-y-4">
-                                            <h3 className="font-extrabold text-base border-b pb-3">{language === 'am' ? 'የዕቃዎች ብልሽት መመዝገቢያ' : 'Report Material Wastage'}</h3>
-                                            <form onSubmit={handleWastageLog} className="space-y-3">
-                                                <select value={wastageItem} onChange={e => setWastageItem(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <option value="">{language === 'am' ? 'የተበላሸውን እቃ ይምረጡ' : 'Select Damaged Item...'}</option>
-                                                    {friendshipInventory.map(item => (
-                                                        <option key={item.id} value={item.name}>{item.name}</option>
-                                                    ))}
-                                                </select>
-                                                <input type="number" placeholder={language === 'am' ? 'የተበላሸው ብዛት' : 'Quantity'} value={wastageQty} onChange={e => setWastageQty(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <input type="text" placeholder={language === 'am' ? 'የብልሽቱ ምክንያት' : 'Reason'} value={wastageReason} onChange={e => setWastageReason(e.target.value)} className={`w-full text-xs p-3 border rounded-xl outline-none ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`} />
-                                                <label className={`block w-full text-xs p-3 border rounded-xl cursor-pointer ${isDarkMode ? 'bg-[#1e293b] text-white border-slate-700' : 'bg-[#F4F7FE] text-slate-800 border-slate-200'}`}>
-                                                    <span className="block font-bold">{language === 'am' ? 'ፎቶ ያያይዙ' : 'Attach photo'}</span>
-                                                    <input type="file" accept="image/*" className="hidden" onChange={e => setWastagePhotoName(e.target.files?.[0]?.name ?? '')} />
-                                                    <span className="block mt-1 text-[10px] text-slate-400 break-all">{wastagePhotoName || 'No photo selected'}</span>
-                                                </label>
-                                                <button type="submit" disabled={processingItems.has('global-form')} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl text-xs font-bold transition disabled:opacity-50">{processingItems.has('global-form') ? 'Processing...' : 'ብልሽት መዝግብ (Log Damage)'}</button>
                                             </form>
                                         </div>
                                     )}
