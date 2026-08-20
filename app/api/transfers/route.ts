@@ -17,7 +17,17 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { source_site_id, dest_site_id, item_id, quantity, qty, transfer_type } = await req.json()
+  let { source_site_id, dest_site_id, item_id, quantity, qty, transfer_type } = await req.json()
+
+  // Handle destination site name to UUID mapping
+  let final_dest_site_id = dest_site_id
+  const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(dest_site_id)
+  
+  if (!isUUID && dest_site_id) {
+    const { data: site } = await supabase.from('sites').select('id').eq('name', dest_site_id).single()
+    if (!site) return NextResponse.json({ error: 'Destination site not found' }, { status: 400 })
+    final_dest_site_id = site.id
+  }
 
   const { authorized, error: authError } = await requireRole(
     supabase as any,
@@ -29,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase.rpc('initiate_transfer', {
     p_source_site_id: source_site_id,
-    p_dest_site_id: dest_site_id,
+    p_dest_site_id: final_dest_site_id,
     p_item_id: item_id,
     p_quantity: quantity ?? qty,
     p_transfer_type: transfer_type,

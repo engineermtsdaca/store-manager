@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   const { authorized, error: authError } = await requireRole(
     supabase as any,
     user.id,
-    ['engineer', 'whole_manager', 'ceo'],
+    ['engineer', 'storekeeper', 'whole_manager', 'ceo'],
     site_id
   )
   if (!authorized) return NextResponse.json({ error: authError }, { status: 403 })
@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest) {
   const { authorized, error: authError } = await requireRole(
     supabase as any,
     user.id,
-    ['engineer', 'whole_manager', 'ceo', 'finance'],
+    ['engineer', 'storekeeper', 'whole_manager', 'ceo', 'finance'],
     site_id
   )
   if (!authorized) return NextResponse.json({ error: authError }, { status: 403 })

@@ -55,3 +55,11 @@ fix-stuck-req.js
 tunnel.log
 *.patch
 CHAT_LOG.md
+
+# One-off admin/debug/test scripts that reference the service-role key.
+# Excluded from the repo and deployed bundle (SECURITY hygiene).
+/cdp_test.ts
+/check-receipts.ts
+/fix-stuck-req.ts
+/test_supabase.ts
+/ui_test/

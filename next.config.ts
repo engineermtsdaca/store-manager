@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Gzip/deflate responses served by Next (safe, no behavioural change)
+  compress: true,
+  // Don't advertise the framework in a response header
+  poweredByHeader: false,
+  // Skip generating browser source maps in production for smaller/faster builds
+  productionBrowserSourceMaps: false,
+  experimental: {
+    // Tree-shake named imports from these packages to shrink client bundles
+    optimizePackageImports: ['@supabase/supabase-js', '@supabase/ssr'],
+  },
   async headers() {
     return [
       {

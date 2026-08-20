@@ -8,9 +8,24 @@ const RATE_LIMIT_WINDOW_SECONDS = 60; // 1 minute
 
 export async function middleware(request: NextRequest) {
   // --- Rate Limiting Logic (Supabase DB-Backed) ---
-  // Get client IP from headers (request.ip is not available in Next.js App Router)
-  const rawIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown-ip';
-  const ip = rawIp.split(',')[0].trim(); // Safely get the first IP in the chain
+  // Get client IP from headers (request.ip is not available in Next.js App Router).
+  //
+  // SECURITY: x-forwarded-for is client-controlled. The *left-most* entry is whatever
+  // the client sent and is trivially spoofable, so an attacker could get a fresh
+  // rate-limit bucket per fake IP. If you run behind a known number of trusted proxies,
+  // set TRUSTED_PROXY_COUNT to that count and we take the IP that many hops from the
+  // RIGHT of the chain (the address your own proxy appended, which the client cannot
+  // forge). When unset, we fall back to the previous left-most behaviour (no change).
+  const xff = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown-ip';
+  const xffParts = xff.split(',').map(s => s.trim()).filter(Boolean);
+  const trustedProxyCount = parseInt(process.env.TRUSTED_PROXY_COUNT || '0', 10);
+  let ip: string;
+  if (trustedProxyCount > 0 && xffParts.length >= trustedProxyCount) {
+    // e.g. count=1 -> take the last entry (added by our proxy)
+    ip = xffParts[xffParts.length - trustedProxyCount];
+  } else {
+    ip = xffParts[0] || 'unknown-ip';
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -36,7 +51,16 @@ export async function middleware(request: NextRequest) {
 
       if (error) {
         console.error('Rate limit error:', error)
-        // Fail-open (allow request) if DB fails so we don't bring down the app
+        // SECURITY: For security-sensitive auth endpoints, fail CLOSED on a rate-limit
+        // DB error — otherwise an attacker could disable brute-force protection by
+        // making the check fail. For all other (non-auth) traffic we keep failing OPEN
+        // so a transient DB blip doesn't take the whole app down.
+        if (request.nextUrl.pathname.startsWith('/api/auth')) {
+          return NextResponse.json(
+            { error: 'Service temporarily unavailable. Please try again shortly.' },
+            { status: 503 }
+          )
+        }
       } else if (allowed === false) {
         if (request.nextUrl.pathname.startsWith('/api')) {
           return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
@@ -72,7 +96,13 @@ export async function middleware(request: NextRequest) {
       } catch (e) {}
     }
 
-    if (host && (host.includes('127.0.0.1') || host.includes('localhost') || host.includes('host.docker.internal'))) {
+    // SECURITY (MED-01): Only allow the localhost host bypass in non-production.
+    // In production this must never short-circuit CSRF, otherwise a proxy whose
+    // internal Host is "localhost" would defeat the check.
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      host && (host.includes('127.0.0.1') || host.includes('localhost') || host.includes('host.docker.internal'))
+    ) {
       isValidCsrf = true;
     }
 
@@ -126,7 +156,6 @@ export async function middleware(request: NextRequest) {
                           request.nextUrl.pathname.startsWith('/api/auth/login') ||
                           request.nextUrl.pathname.startsWith('/api/auth/forgot-password') ||
                           request.nextUrl.pathname.startsWith('/api/auth/reset-password') ||
-                          request.nextUrl.pathname.startsWith('/api/debug') ||
                           request.nextUrl.pathname.startsWith('/api/internal/poll-messages');
                           
     if (!user && !isPublicRoute) {
@@ -141,7 +170,6 @@ export async function middleware(request: NextRequest) {
                           request.nextUrl.pathname.startsWith('/api/auth/login') ||
                           request.nextUrl.pathname.startsWith('/api/auth/forgot-password') ||
                           request.nextUrl.pathname.startsWith('/api/auth/reset-password') ||
-                          request.nextUrl.pathname.startsWith('/api/debug') ||
                           request.nextUrl.pathname.startsWith('/api/internal/poll-messages');
                           
     if (!isPublicRoute) {

@@ -37,6 +37,50 @@ export async function POST(req: NextRequest) {
 
     const admin = getAdminClient()
 
+    // --- SECURITY: Brute-force protection on the OTP verify step ---
+    // The OTP is only 6 digits (1,000,000 combinations), so without limits an
+    // attacker could hammer it within the 15-min window. We use the existing
+    // check_rate_limit RPC (same one used by login/forgot-password) to cap
+    // verification attempts per IP AND per username. No schema change needed.
+    const rawIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    const ip = rawIp.split(',')[0].trim()
+    const usernameKey = username.trim().toUpperCase()
+
+    // Per-IP: max 10 verify attempts / 15 min (skip for localhost, matching other routes)
+    if (ip !== 'unknown' && !ip.includes('127.0.0.1') && ip !== '::1') {
+      const { data: ipAllowed } = await admin.rpc('check_rate_limit', {
+        p_ip: ip + '_otp_verify',
+        p_max_requests: 10,
+        p_window_seconds: 900,
+      })
+      if (ipAllowed === false) {
+        return NextResponse.json(
+          { error: 'Too many attempts. Please try again in 15 minutes.' },
+          { status: 429 }
+        )
+      }
+    }
+
+    // Per-username: max 5 verify attempts / 15 min, regardless of source IP
+    const { data: userAllowed } = await admin.rpc('check_rate_limit', {
+      p_ip: 'user_' + usernameKey + '_otp_verify',
+      p_max_requests: 5,
+      p_window_seconds: 900,
+    })
+    if (userAllowed === false) {
+      // Too many failed attempts for this account — invalidate the OTP so it
+      // cannot be brute-forced further. A fresh OTP must be requested (which is
+      // itself rate-limited in forgot-password).
+      await admin
+        .from('user_profiles')
+        .update({ reset_otp: null, reset_otp_expires_at: null } as any)
+        .eq('username', usernameKey)
+      return NextResponse.json(
+        { error: 'Too many attempts. Please request a new code.' },
+        { status: 429 }
+      )
+    }
+
     // --- Look up user with OTP fields ---
     const { data: profile, error: profileError } = await admin
       .from('user_profiles')

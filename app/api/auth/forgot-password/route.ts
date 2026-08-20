@@ -11,6 +11,7 @@
 
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { randomInt } from 'crypto'
 import { sendTelegram } from '@/lib/telegram'
 
 function getAdminClient() {
@@ -70,8 +71,9 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // --- Generate 6-digit OTP ---
-    const otp = String(Math.floor(100000 + Math.random() * 900000))
+    // --- Generate 6-digit OTP (cryptographically secure) ---
+    // randomInt(100000, 1000000) yields a uniform integer in [100000, 999999].
+    const otp = String(randomInt(100000, 1000000))
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 
     const { error: updateError } = await admin

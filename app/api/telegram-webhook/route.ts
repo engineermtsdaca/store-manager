@@ -29,10 +29,36 @@ export async function GET() {
   })
 }
 
+// SECURITY: Verify the request genuinely came from Telegram.
+// Telegram sends the secret token (configured when registering the webhook via
+// setWebhook's `secret_token` param) in this header on every update. Without this
+// check, anyone who knows the URL could POST fake updates (e.g. /link USERNAME to
+// hijack another user's account and receive their reset OTP).
+//
+// Graceful rollout: if TELEGRAM_WEBHOOK_SECRET is not configured, we warn but still
+// accept, so the currently-registered webhook is not broken. Set the secret in
+// .env.local AND re-run setWebhook with the same secret_token to enforce it.
+function isFromTelegram(req: NextRequest): boolean {
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET
+  if (!expected) {
+    console.warn(
+      'telegram-webhook: TELEGRAM_WEBHOOK_SECRET is not configured — webhook authenticity ' +
+      'is NOT verified. Set it in .env.local and pass the same secret_token to setWebhook.'
+    )
+    return true
+  }
+  return req.headers.get('x-telegram-bot-api-secret-token') === expected
+}
+
 // POST /api/telegram-webhook — receives updates from Telegram
 // Telegram calls this endpoint when someone messages the bot
 export async function POST(req: NextRequest) {
   try {
+    // Reject forged requests that don't carry Telegram's secret token.
+    if (!isFromTelegram(req)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const body = await req.json()
     const message = body.message
 

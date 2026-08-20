@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useInventory } from '@/hooks/useInventory';
@@ -12,7 +13,10 @@ import { useWastage } from '@/hooks/useWastage';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useReceipts } from '@/hooks/useReceipts';
 import { useMaterialRequests } from '@/hooks/useMaterialRequests';
-import ReceiptModal from '@/components/ReceiptModal';
+// Lazy-loaded: ReceiptModal statically pulls in jspdf + dom-to-image-more (large libs)
+// which are only needed when a receipt is opened. Loading it on demand keeps them out
+// of the initial page bundle. Behaviour is unchanged (modal only renders when opened).
+const ReceiptModal = dynamic(() => import('@/components/ReceiptModal'), { ssr: false });
 import ReceiptsStore from '@/components/ReceiptsStore';
 import PurchaseOrderWorkflow from '@/components/PurchaseOrderWorkflow';
 import MaintenanceDashboard from '@/components/MaintenanceDashboard';
@@ -1288,6 +1292,12 @@ export default function CappadociaApp() {
                                         {renderText('የዋና ስራ አስኪያጅ ማረጋገጫ', 'Whole Manager Approvals')}
                                     </div>
                                 )}
+                                {user.role === 'whole_manager' && (
+                                    <div onClick={() => setActiveOverlay('manager_attendance')} className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}>
+                                        <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                        {renderText('የሠራተኞች መገኘት ሪፖርት', 'Attendance Report')}
+                                    </div>
+                                )}
                                 {user.role === 'purchase_assistant' && (
                                     <div onClick={() => setActiveOverlay('po_workflow')} className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}>
                                         <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -2417,27 +2427,27 @@ export default function CappadociaApp() {
                                     {activeOverlay === 'sk_quick_tasks' && (
                                         <div className="space-y-4 max-w-2xl mx-auto">
                                             <div className="border-b pb-3">
-                                                <h3 className="font-extrabold text-base">Sign-off Material Issues (In Stock)</h3>
+                                                <h3 className="font-extrabold text-base">{language === 'am' ? 'የእቃ አወጣጥ ማረጋገጫ (Sign-off Material Issues)' : 'Sign-off Material Issues (የእቃ አወጣጥ ማረጋገጫ)'}</h3>
                                             </div>
                                             {materialRequests.filter(r => r.status === 'approved_instock').length === 0 ? (
-                                                <p className="text-xs text-[#A3AED0] italic py-8 text-center">No materials waiting for sign-off.</p>
+                                                <p className="text-xs text-[#A3AED0] italic py-8 text-center">{language === 'am' ? 'ለማረጋገጥ የሚጠብቅ እቃ የለም።' : 'No materials waiting for sign-off.'}</p>
                                             ) : (
                                                 <div className="space-y-3">
                                                     {materialRequests.filter(r => r.status === 'approved_instock').map(req => (
                                                         <div key={req.id} className={`p-4 border rounded-xl space-y-3 ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-[#F4F7FE] border-slate-50'}`}>
                                                             <div className="flex justify-between font-bold text-xs">
                                                                 <span>{formatReqNumber(req.req_number)}</span>
-                                                                <span>For: {req.requestedBy}</span>
+                                                                <span>{language === 'am' ? 'ለ:' : 'For:'} {req.requestedBy}</span>
                                                             </div>
-                                                            <h4 className="font-extrabold text-sm">{req.item} ({req.qty} units)</h4>
-                                                            <button disabled={processingItems.has(`sk-signoff-${req.id}`)} onClick={() => withProcessing(`sk-signoff-${req.id}`, async () => handleStoreKeeperSignoff(req.id))} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-xs">{processingItems.has(`sk-signoff-${req.id}`) ? 'Processing...' : 'Confirm Handover'}</button>
+                                                            <h4 className="font-extrabold text-sm">{req.item} ({req.qty} {language === 'am' ? 'ብዛት' : 'units'})</h4>
+                                                            <button disabled={processingItems.has(`sk-signoff-${req.id}`)} onClick={() => withProcessing(`sk-signoff-${req.id}`, async () => handleStoreKeeperSignoff(req.id))} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-xs">{processingItems.has(`sk-signoff-${req.id}`) ? (language === 'am' ? 'በማስኬድ ላይ...' : 'Processing...') : (language === 'am' ? 'እቃ መረከቡን አረጋግጥ (Confirm Handover)' : 'Confirm Handover (እቃ መረከቡን አረጋግጥ)')}</button>
                                                         </div>
                                                     ))}
                                                 </div>
                                             )}
                                         <div className="space-y-4 max-w-2xl mx-auto pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
                                             <div className="border-b pb-3">
-                                                <h3 className="font-extrabold text-base">Receive Bought Materials</h3>
+                                                <h3 className="font-extrabold text-base">{language === 'am' ? 'የተገዙ እቃዎች መቀበያ (Receive Bought Materials)' : 'Receive Bought Materials (የተገዙ እቃዎች መቀበያ)'}</h3>
                                             </div>
                                             <PurchaseOrderWorkflow
                                                 user={user}

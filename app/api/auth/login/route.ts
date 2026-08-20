@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-server'
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json()
-    console.log('API LOGIN ATTEMPT:', { username, password });
+    // SECURITY: never log credentials (plaintext password logging removed).
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
     }
@@ -34,21 +34,22 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient()
     const email = `${username.toLowerCase()}@cappadocia.internal`
-    
-    console.log('API LOGIN: Calling signInWithPassword for', email);
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    console.log('API LOGIN: signInWithPassword returned', { hasData: !!data, hasError: !!error });
-    
+
     if (error) {
-      console.log('SUPABASE LOGIN ERROR:', error.message);
       // SECURITY (LOW-01): Generic error message so account existence is not revealed
       return NextResponse.json({ error: 'Incorrect username or password' }, { status: 401 })
     }
 
-    console.log('API LOGIN: Returning success for', email);
     return NextResponse.json({ success: true, session: data.session })
 
   } catch (err: any) {
-    return NextResponse.json({ error: 'Incorrect username or password' }, { status: 401 })
+    // SECURITY/RELIABILITY: A genuine auth failure is already handled above with a
+    // generic 401. Reaching this catch means an *unexpected* exception (bad JSON,
+    // DB/network failure, misconfig). Returning 401 here would mask real bugs, so we
+    // log server-side and return 500 without leaking internal details to the client.
+    console.error('Login route exception:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
