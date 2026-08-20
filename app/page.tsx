@@ -640,6 +640,10 @@ export default function CappadociaApp() {
                 qty: qtyNum,
                 estimated_price: qtyNum * 1200,
             });
+            await generateReceipt('Site Engineer Material Request', { 
+                Item: reqItemName, 
+                Qty: qtyNum 
+            }, profile?.site_id ?? null);
             setReqItemName('');
             setReqQty('');
             // Removed premature notification to purchaser. They will be notified after CEO approval.

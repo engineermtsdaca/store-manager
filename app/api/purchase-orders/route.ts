@@ -72,6 +72,29 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+
+  // WORKAROUND: If the Postgres trigger `trg_po_notifications` hasn't been updated to fire on INSERT,
+  // we manually insert the notification here to ensure the manager receives it.
+  try {
+    const { createClient: createAdminClient } = require('@supabase/supabase-js')
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+    await adminSupabase.from('system_messages').insert({
+      title: 'PO Request Approval',
+      body: `New purchase request needs site manager authorization.\nItem: ${item}\nQty: ${qty}`,
+      action_key: 'manager_approvals',
+      recipient_role: 'manager',
+      recipient_site_id: site_id,
+      reference_type: 'purchase_order',
+      reference_id: data.id
+    })
+  } catch (e) {
+    console.error('Failed to insert fallback system message', e)
+  }
+
   return NextResponse.json(data, { status: 201 })
 }
 
