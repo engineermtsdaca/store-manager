@@ -515,7 +515,7 @@ export default function CappadociaApp() {
         }
         const qtyNum = parseFloat(inventoryItemQty);
         try {
-            await addInventoryItem(inventoryItemName, inventoryItemUnit, qtyNum, inventoryItemSource);
+            await addInventoryItem(inventoryItemName, inventoryItemUnit, qtyNum, inventoryItemSource, inventoryItemSource === 'received' ? inventoryItemSourceSite : undefined);
             
             const receiptPayload: any = { item: inventoryItemName, qty: qtyNum, unit: inventoryItemUnit, source: inventoryItemSource };
             if (inventoryItemSource === 'received') {

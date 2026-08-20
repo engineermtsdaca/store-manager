@@ -49,11 +49,11 @@ export function useInventory(siteId: string | null) {
     return () => { supabase.removeChannel(channel) }
   }, [siteId, fetchInventory])
 
-  const addItem = async (name: string, unit: string, quantity: number, source: 'received' | 'bought') => {
+  const addItem = async (name: string, unit: string, quantity: number, source: 'received' | 'bought', fromSite?: string) => {
     const res = await fetch('/api/inventory', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ site_id: siteId, name, unit, quantity, source }),
+      body: JSON.stringify({ site_id: siteId, name, unit, quantity, source, from_site: fromSite }),
     })
     if (!res.ok) throw new Error((await res.json()).error)
   }

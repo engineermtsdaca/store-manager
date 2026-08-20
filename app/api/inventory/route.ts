@@ -8,7 +8,18 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { site_id, name, unit, quantity, source } = await req.json()
+  const { site_id, name, unit, quantity, source, from_site } = await req.json()
+
+  let final_from_site_id = null
+  if (from_site) {
+    const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(from_site)
+    if (isUUID) {
+      final_from_site_id = from_site
+    } else {
+      const { data: siteObj } = await supabase.from('sites').select('id').eq('name', from_site).single()
+      if (siteObj) final_from_site_id = siteObj.id
+    }
+  }
 
   const { authorized, error: authError } = await requireRole(
     supabase as any,
@@ -25,6 +36,7 @@ export async function POST(req: NextRequest) {
     p_quantity: quantity,
     p_source: source,
     p_user_id: user.id,
+    p_from_site_id: final_from_site_id
   } as any)
 
   const result = data as any
