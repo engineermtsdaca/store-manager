@@ -95,31 +95,66 @@ export async function PATCH(req: NextRequest) {
     }
   } else if (action === 'storekeeper_signoff') {
     if (role !== 'storekeeper') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    const { data: reqToSign, error: reqError } = await supabase.from('material_requests').select('*, user_profiles(name_en)').eq('id', request_id).single()
-    if (reqError || !reqToSign) return NextResponse.json({ error: 'Request not found' }, { status: 404 })
+    const { data: reqToSign, error: reqError } = await supabase.from('material_requests').select('*').eq('id', request_id).single()
+    if (reqError || !reqToSign) {
+      console.error('[SK Signoff] Request not found:', request_id, reqError)
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 })
+    }
 
-    const { data: invItem, error: invError } = await supabase.from('inventory_items')
+    // Try exact match first, then case-insensitive with ilike
+    let invItem: any = null
+    const { data: exactMatch } = await supabase.from('inventory_items')
       .select('id').eq('name', reqToSign.item).eq('site_id', reqToSign.site_id).single()
     
-    if (invError || !invItem) return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
+    if (exactMatch) {
+      invItem = exactMatch
+    } else {
+      // Fallback: case-insensitive + trimmed match
+      const { data: ilikeMatch } = await supabase.from('inventory_items')
+        .select('id').ilike('name', reqToSign.item.trim()).eq('site_id', reqToSign.site_id).single()
+      invItem = ilikeMatch
+    }
+    
+    if (!invItem) {
+      console.warn('[SK Signoff] Item not in inventory, proceeding with handover only. Item:', reqToSign.item, 'Site:', reqToSign.site_id)
+    }
+    
+    // Deduct from inventory only if the item exists
+    let inventoryDeducted = false
+    if (invItem) {
+      const { error: rpcError, data: rpcData } = await supabase.rpc('log_inventory_usage', { 
+        p_site_id: reqToSign.site_id,
+        p_item_id: invItem.id, 
+        p_quantity: reqToSign.qty,
+        p_user_id: user.id,
+        p_notes: 'Approved via Material Request handover'
+      })
+      const rpcResult = rpcData as any;
+      if (rpcError || !rpcResult?.success) {
+        console.error('[SK Signoff] RPC failed:', rpcError, rpcResult)
+        return NextResponse.json({ error: 'Failed to log usage: ' + (rpcResult?.error || rpcError?.message || 'Insufficient stock or internal error') }, { status: 500 })
+      }
+      inventoryDeducted = true
+    }
 
-    const { error: rpcError, data: rpcData } = await supabase.rpc('log_inventory_usage', { 
-      p_site_id: reqToSign.site_id,
-      p_item_id: invItem.id, 
-      p_quantity: reqToSign.qty,
-      p_user_id: user.id,
-      p_notes: 'Approved via Material Request handover'
-    })
-    const rpcResult = rpcData as any;
-    if (rpcError || !rpcResult?.success) return NextResponse.json({ error: 'Failed to log usage: ' + (rpcResult?.error || 'Internal server error') })
-
-    // Update the request status
+    // Update the request status to delivered
     const { error: updateError } = await supabase.from('material_requests').update({ status: 'delivered' } as any).eq('id', request_id)
-    if (updateError) return NextResponse.json({ error: 'Failed to update request' }, { status: 500 })
+    if (updateError) {
+      console.error('[SK Signoff] Update failed:', updateError)
+      return NextResponse.json({ error: 'Failed to update request' }, { status: 500 })
+    }
+
+    // Fetch subcontractor name separately (safe even if requested_by is NULL)
+    let subcontractorName = 'Unknown'
+    if (reqToSign.requested_by) {
+      const { data: scProfile } = await supabase.from('user_profiles').select('name_en').eq('id', reqToSign.requested_by).single()
+      if (scProfile) subcontractorName = (scProfile as any).name_en || 'Unknown'
+    }
 
     return NextResponse.json({ 
       success: true, 
-      subcontractorName: reqToSign.user_profiles?.name_en,
+      inventoryDeducted,
+      subcontractorName,
       item: reqToSign.item,
       qty: reqToSign.qty
     })

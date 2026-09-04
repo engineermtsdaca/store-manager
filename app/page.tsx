@@ -819,8 +819,17 @@ export default function CappadociaApp() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ request_id: reqId, action: 'storekeeper_signoff' })
             });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
+            
+            let data: any;
+            try {
+                data = await res.json();
+            } catch {
+                throw new Error(`Server error (${res.status}). Please try again.`);
+            }
+            
+            if (!res.ok || data.error) {
+                throw new Error(data?.error || `Request failed (${res.status})`);
+            }
             
             const msgToDismiss = systemMessages.find(m => m.reference_id === reqId && m.action_key === 'storekeeper_signoff');
             if (msgToDismiss) dismissMsg(msgToDismiss.id);
@@ -835,7 +844,7 @@ export default function CappadociaApp() {
                 Qty: data.qty || 0
             }, profile?.site_id ?? null);
         } catch (err: any) {
-            alert(err.message);
+            alert(err.message || 'Handover failed. Please try again.');
         }
     };
 
