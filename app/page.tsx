@@ -261,7 +261,7 @@ export default function CappadociaApp() {
     const [wastageReason, setWastageReason] = useState('');
     const [wastagePhotoName, setWastagePhotoName] = useState('');
     const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
-    const [inventoryAction, setInventoryAction] = useState<'transfer' | 'used' | 'damage' | 'add_new' | null>(null);
+    const [inventoryAction, setInventoryAction] = useState<'transfer' | 'used' | 'damage' | 'add_new' | 'add_existing' | null>(null);
     const [usageUsedBy, setUsageUsedBy] = useState('');
     
     // --- GLOBAL UI LOCK STATE ---
