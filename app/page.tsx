@@ -107,7 +107,7 @@ export default function CappadociaApp() {
             .reduce((sum, req) => sum + req.qty, 0);
 
         const pendingTransferQty = dbTransfers
-            .filter(tr => (tr.status === 'pending_manager' || tr.status === 'pending_finance') && tr.item_name === i.name)
+            .filter(tr => (tr.status === 'pending_whole_manager' || tr.status === 'pending_finance') && tr.item_name === i.name)
             .reduce((sum, tr) => sum + tr.qty, 0);
 
         return { 
