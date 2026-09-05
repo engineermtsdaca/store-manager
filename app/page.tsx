@@ -1139,6 +1139,12 @@ export default function CappadociaApp() {
 
                         {user && (
                             <>
+                                <div className="w-full text-center md:hidden pb-1 mb-1 border-b border-white/10">
+                                    <p className="text-[10px] font-bold text-white tracking-wide">
+                                        {language === 'am' ? user.nameAm : user.nameEn} <span className="text-white/50 mx-1">•</span> <span className="text-blue-300">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</span>
+                                    </p>
+                                </div>
+
                                 <div className="w-px h-5 sm:h-6 bg-white/10 mx-0.5 hidden sm:block"></div>
 
                                 <button
