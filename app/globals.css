@@ -246,3 +246,151 @@ table {
     margin: 1cm;
   }
 }
+
+/* ===== MOBILE RESPONSIVE FOUNDATION ===== */
+
+/* Prevent iOS zoom on input focus (requires 16px minimum) */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile touch targets — ensure all interactive elements are tappable */
+@media (max-width: 640px) {
+  button, [role="button"] {
+    min-height: 40px;
+  }
+}
+
+/* Prevent body horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* --- Mobile header compaction --- */
+@media (max-width: 640px) {
+  /* Tighten header padding on mobile */
+  header.sticky {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  /* Shrink main heading on mobile */
+  header h1 {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Shrink subtitle */
+  header p {
+    font-size: 9px !important;
+  }
+
+  /* Reduce main content padding */
+  main {
+    padding: 12px !important;
+    margin-top: 12px !important;
+  }
+}
+
+/* --- Mobile overlay modals: full-width bottom-sheet --- */
+@media (max-width: 640px) {
+  /* Make overlay modals use full width and less padding */
+  .overlay-backdrop > div {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+  }
+
+  /* Reduce internal padding for overlays on mobile */
+  .overlay-backdrop > div > div {
+    padding: 16px !important;
+  }
+}
+
+/* --- Mobile action cards: smaller on phones --- */
+@media (max-width: 640px) {
+  .card-glow {
+    height: auto !important;
+    min-height: 120px;
+    padding: 16px !important;
+  }
+
+  /* Disable card hover effects on touch devices */
+  .card-glow:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* --- Mobile tables: horizontal scroll with shadow hint --- */
+.mobile-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+/* Fade hint indicating more content to the right */
+.mobile-table-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to left, rgba(15,23,42,0.15), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+@media (max-width: 768px) {
+  .mobile-table-wrap::after {
+    opacity: 1;
+  }
+}
+
+/* --- Mobile inventory card layout (replaces table on small screens) --- */
+@media (max-width: 640px) {
+  .inventory-mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  .inventory-mobile-card .inv-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+  }
+
+  .inventory-mobile-card .inv-value {
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+/* --- Mobile form fields: full width --- */
+@media (max-width: 640px) {
+  form .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* --- Mobile footer --- */
+@media (max-width: 640px) {
+  footer {
+    padding: 16px 12px !important;
+    margin-top: 24px !important;
+  }
+}
+

@@ -184,12 +184,12 @@ export default function LoginPage() {
       }}
     >
       {/* --- PREFERENCES TOGGLES --- */}
-      <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '12px', alignItems: 'center', background: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', padding: '8px', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
-        <div style={{ display: 'flex', background: isDarkMode ? 'rgba(244,247,254,0.15)' : 'rgba(0,0,0,0.1)', padding: '2px', borderRadius: '12px', fontSize: '12px' }}>
-            <button onClick={() => setLanguage('am')} style={{ padding: '4px 12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: language === 'am' ? '#2563eb' : 'transparent', color: language === 'am' ? '#fff' : (isDarkMode ? '#bfdbfe' : '#475569') }}>አማርኛ</button>
-            <button onClick={() => setLanguage('en')} style={{ padding: '4px 12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: language === 'en' ? '#2563eb' : 'transparent', color: language === 'en' ? '#fff' : (isDarkMode ? '#bfdbfe' : '#475569') }}>English</button>
+      <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px', alignItems: 'center', background: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', padding: '6px', borderRadius: '14px', backdropFilter: 'blur(10px)', zIndex: 10 }}>
+        <div style={{ display: 'flex', background: isDarkMode ? 'rgba(244,247,254,0.15)' : 'rgba(0,0,0,0.1)', padding: '2px', borderRadius: '10px', fontSize: '11px' }}>
+            <button onClick={() => setLanguage('am')} style={{ padding: '4px 10px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: language === 'am' ? '#2563eb' : 'transparent', color: language === 'am' ? '#fff' : (isDarkMode ? '#bfdbfe' : '#475569'), minHeight: '32px' }}>አማ</button>
+            <button onClick={() => setLanguage('en')} style={{ padding: '4px 10px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', background: language === 'en' ? '#2563eb' : 'transparent', color: language === 'en' ? '#fff' : (isDarkMode ? '#bfdbfe' : '#475569'), minHeight: '32px' }}>EN</button>
         </div>
-        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ padding: '6px', borderRadius: '12px', background: isDarkMode ? 'rgba(244,247,254,0.1)' : 'rgba(0,0,0,0.1)', border: 'none', color: isDarkMode ? '#fff' : '#000', cursor: 'pointer' }} title="Toggle Day/Night">
+        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ padding: '6px', borderRadius: '10px', background: isDarkMode ? 'rgba(244,247,254,0.1)' : 'rgba(0,0,0,0.1)', border: 'none', color: isDarkMode ? '#fff' : '#000', cursor: 'pointer', minHeight: '32px', minWidth: '32px' }} title="Toggle Day/Night">
             {isDarkMode ? '☀️' : '🌙'}
         </button>
       </div>

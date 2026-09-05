@@ -29,7 +29,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
       <div className={`w-full max-w-5xl max-h-[90vh] flex flex-col rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden ${isDarkMode ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-800'}`}>
         
         {/* HEADER */}
-        <div className={`flex justify-between items-center p-6 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+        <div className={`flex justify-between items-center p-4 sm:p-6 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
           <div>
             <h2 className="text-xl font-black">
               {language === 'am' ? 'የስርዓት ደረሰኞች (System Receipts)' : 'System Receipts'}
@@ -44,7 +44,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
         </div>
 
         {/* FILTERS */}
-        <div className={`p-6 border-b flex gap-4 ${isDarkMode ? 'border-slate-800 bg-[#1e293b]/30' : 'border-slate-100 bg-slate-50'}`}>
+        <div className={`p-4 sm:p-6 border-b flex flex-col sm:flex-row gap-3 sm:gap-4 ${isDarkMode ? 'border-slate-800 bg-[#1e293b]/30' : 'border-slate-100 bg-slate-50'}`}>
           <input 
             type="text" 
             placeholder={language === 'am' ? 'በደረሰኝ ቁጥር ይፈልጉ...' : 'Search by receipt number or type...'}
@@ -56,7 +56,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
           <select 
             value={filterUser}
             onChange={(e) => setFilterUser(e.target.value)}
-            className={`w-64 p-3 rounded-xl text-sm border outline-none ${isDarkMode ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200'}`}
+            className={`w-full sm:w-64 p-3 rounded-xl text-sm border outline-none ${isDarkMode ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200'}`}
           >
             <option value="All">All Users</option>
             {uniqueUsers.map(u => (
@@ -66,10 +66,11 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
         </div>
 
         {/* TABLE */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-6">
           {filteredReceipts.length === 0 ? (
             <div className="text-center py-12 text-slate-500 font-bold">No receipts found.</div>
           ) : (
+            <div className="overflow-x-auto mobile-table-wrap">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className={`text-xs uppercase font-extrabold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -101,6 +102,7 @@ export default function ReceiptsStore({ receipts, language, isDarkMode, onClose,
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

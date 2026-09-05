@@ -1094,22 +1094,23 @@ export default function CappadociaApp() {
             />
             
             {/* CAPPADOCIA REALESTATE TOP BRAND BAR */}
-            <header className={`sticky top-0 z-40 px-5 py-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0a1232]/90 border-slate-800/50 glass' : 'bg-blue-950/95 text-white glass border-red-600/30'}`}>
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <header className={`sticky top-0 z-40 px-3 sm:px-5 py-2.5 sm:py-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0a1232]/90 border-slate-800/50 glass' : 'bg-blue-950/95 text-white glass border-red-600/30'}`}>
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4">
                     <div className="text-center md:text-left">
-                        <span className="text-[10px] font-bold bg-gradient-to-r from-blue-600 to-blue-500 px-3 py-1 rounded-full tracking-wider text-white uppercase shadow-lg shadow-blue-600/25">
+                        <span className="text-[9px] sm:text-[10px] font-bold bg-gradient-to-r from-blue-600 to-blue-500 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full tracking-wider text-white uppercase shadow-lg shadow-blue-600/25">
                             {language === 'am' ? 'የተቀናጀ የቁጥጥር ሥርዓት' : 'Unified Control System'}
                         </span>
-                        <h1 className="text-lg font-black mt-2.5 tracking-tight text-white uppercase">
-                            CAPPADOCIA REALESTATE S.C. • ADDISU HABTE • VILA VERDE
+                        <h1 className="text-xs sm:text-lg font-black mt-1.5 sm:mt-2.5 tracking-tight text-white uppercase">
+                            <span className="hidden sm:inline">CAPPADOCIA REALESTATE S.C. • ADDISU HABTE • VILA VERDE</span>
+                            <span className="sm:hidden">CAPPADOCIA R.E. • ADDISU HABTE</span>
                         </h1>
-                        <p className="text-[11px] text-blue-300/80 mt-1 font-medium">
+                        <p className="text-[9px] sm:text-[11px] text-blue-300/80 mt-0.5 sm:mt-1 font-medium">
                             {language === 'am' ? 'የግንባታ እቃዎችና የጥቃቅን ገንዘብ ቁጥጥር (Stores & Petty Cash)' : 'Building Materials & Petty Cash Control System'}
                         </p>
                     </div>
 
                     {/* DAY/NIGHT MODE & BILINGUAL TOGGLES */}
-                    <div className="flex items-center gap-3 bg-white/[0.06] p-2 rounded-2xl border border-white/[0.06]">
+                    <div className="flex items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2 rounded-2xl border border-white/[0.06]">
                         {/* Bilingual Switcher */}
                         <div className="flex bg-[#F4F7FE]/15 p-0.5 rounded-xl text-xs">
                             <button
@@ -1139,7 +1140,7 @@ export default function CappadociaApp() {
 
 
                     {user && (
-                        <div className="flex items-center gap-3 bg-white/[0.06] p-2.5 rounded-2xl border border-white/[0.06]">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2.5 rounded-2xl border border-white/[0.06]">
                             <button
                                 onClick={() => setShowInstantApprovalPopup(true)}
                                 className="relative bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"
@@ -1151,7 +1152,7 @@ export default function CappadociaApp() {
                                     </span>
                                 )}
                             </button>
-                            <div className="text-right">
+                            <div className="text-right hidden sm:block">
                                 <p className="text-xs font-black text-white">{language === 'am' ? user.nameAm : user.nameEn}</p>
                                 <p className="text-[10px] text-blue-200">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</p>
                             </div>
@@ -1175,7 +1176,7 @@ export default function CappadociaApp() {
             </header>
 
             {/* BODY WRAPPER */}
-            <main className="max-w-7xl mx-auto p-4 md:p-6 mt-8 relative">
+            <main className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6 mt-4 sm:mt-8 relative">
 
                 {/* ==================== GATE 0: SECURE BILINGUAL LOGIN SCREEN ==================== */}
                 {!user && (
@@ -1191,7 +1192,7 @@ export default function CappadociaApp() {
                         {/* ==================== THE ULTIMATE 100% CLEAN LAUNCHPAD (ZERO CLUTTER) ==================== */}
                         {/* The rest is NOT SEEN by default. Only these beautiful visual action cards (with custom SVG illustrations) are shown. */}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 stagger-children">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 stagger-children">
 
                             {/* --- GLOBAL ACTION: RECEIPTS --- */}
                             <div onClick={() => setActiveOverlay('receipts')} className={`p-6 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.06)] border cursor-pointer card-glow flex flex-col justify-between h-48 ${isDarkMode ? 'bg-[#1e293b] border-slate-800/60' : 'bg-white border-slate-100/80'}`}>
@@ -1479,7 +1480,7 @@ export default function CappadociaApp() {
                                             )}
 
                                             {/* Inventory Table */}
-                                            <div className="overflow-x-auto text-xs">
+                                            <div className="overflow-x-auto mobile-table-wrap text-xs">
                                                 <table className="w-full text-left border-collapse">
                                                     <thead>
                                                         <tr className={`border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'} uppercase text-[#A3AED0]`}>
@@ -2491,8 +2492,8 @@ export default function CappadociaApp() {
 
             {/* ==================== MESSAGE CENTER DRAWER ==================== */}
             {showInstantApprovalPopup && user && (
-                <div className="fixed inset-0 bg-slate-950/50 overlay-backdrop flex items-center justify-center p-4 z-50" onClick={(e) => { if (e.target === e.currentTarget) setShowInstantApprovalPopup(false); }}>
-                    <div className="bg-white dark:bg-[#0c1433] rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.2)] max-w-xl w-full overflow-hidden animate-scale-in border border-slate-100 dark:border-slate-800/50">
+                <div className="fixed inset-0 bg-slate-950/50 overlay-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4 z-50" onClick={(e) => { if (e.target === e.currentTarget) setShowInstantApprovalPopup(false); }}>
+                    <div className="bg-white dark:bg-[#0c1433] rounded-t-[28px] sm:rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.2)] w-full sm:max-w-xl overflow-hidden animate-scale-in border border-slate-100 dark:border-slate-800/50 max-h-[90vh] sm:max-h-none">
                         <div className="p-6 space-y-4 text-slate-800 dark:text-white">
                             <div className="flex justify-between items-start border-b border-slate-100/10 pb-3">
                                 <div>
@@ -2558,7 +2559,7 @@ export default function CappadociaApp() {
                             </div>
 
                             {/* Fake Proformas Comparison sheet */}
-                            <div className="border rounded-xl overflow-hidden text-xs">
+                            <div className="border rounded-xl overflow-hidden text-xs overflow-x-auto mobile-table-wrap">
                                 <table className="w-full text-left border-collapse text-slate-800">
                                     <thead>
                                         <tr className="bg-slate-50 border-b">

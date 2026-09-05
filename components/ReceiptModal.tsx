@@ -86,12 +86,12 @@ export default function ReceiptModal({ receipt, onClose, language }: ReceiptModa
   };
 
   return (
-    <div id="printable-receipt-container" className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:static print:bg-white print:p-0">
+    <div id="printable-receipt-container" className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 print:static print:bg-white print:p-0">
       {/* Modal Container */}
-      <div className="bg-white text-slate-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] print:shadow-none print:max-w-none">
+      <div className="bg-white text-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg shadow-2xl flex flex-col max-h-[90vh] print:shadow-none print:max-w-none">
         
         {/* Printable Area */}
-        <div id="printable-receipt-content" className="p-8 overflow-y-auto print:p-0 print:text-black bg-white rounded-t-2xl">
+        <div id="printable-receipt-content" className="p-4 sm:p-8 overflow-y-auto print:p-0 print:text-black bg-white rounded-t-2xl">
           <div className="text-center border-b-2 border-slate-200 pb-6 mb-6 print:border-black">
             <h1 className="text-2xl font-black uppercase tracking-widest text-slate-900 print:text-black">
               Cappadocia Realestate
