@@ -1094,11 +1094,11 @@ export default function CappadociaApp() {
             />
             
             {/* CAPPADOCIA REALESTATE TOP BRAND BAR */}
-            <header className={`sticky top-0 z-40 px-3 sm:px-5 py-2.5 sm:py-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0a1232]/90 border-slate-800/50 glass' : 'bg-blue-950/95 text-white glass border-red-600/30'}`}>
+            <header className={`sticky top-0 z-40 px-1 sm:px-5 py-1 sm:py-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0a1232]/90 border-slate-800/50 glass' : 'bg-blue-950/95 text-white glass border-red-600/30'}`}>
                 <div className="max-w-7xl mx-auto flex flex-row justify-between items-center gap-1 sm:gap-4 w-full">
                     
                     {/* LEFT SIDE: Language & Theme */}
-                    <div className="flex flex-col sm:flex-row items-center gap-0.5 bg-white/[0.06] p-0.5 sm:p-2.5 rounded-xl border border-white/[0.06] shrink-0">
+                    <div className="flex flex-col sm:flex-row items-center gap-0 sm:gap-1.5 bg-white/[0.06] p-0 sm:p-2.5 rounded-md sm:rounded-xl border border-white/[0.06] shrink-0">
                         {/* Night / Day Switcher (Now at the top) */}
                         <button onClick={() => setIsDarkMode(!isDarkMode)} className="py-0 px-1 sm:p-1.5 rounded-lg bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all text-[10px] sm:text-base w-full sm:w-auto flex items-center justify-center h-4 sm:h-auto" title="Toggle Day/Night">
                             <span className="transform scale-75 origin-center">{isDarkMode ? '☀️' : '🌙'}</span>
@@ -1135,7 +1135,7 @@ export default function CappadociaApp() {
 
                     {/* RIGHT SIDE: Action Buttons */}
                     {user && (
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 bg-white/[0.06] p-0.5 sm:p-2.5 rounded-xl border border-white/[0.06] shrink-0">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0 sm:gap-1.5 bg-white/[0.06] p-0 sm:p-2.5 rounded-md sm:rounded-xl border border-white/[0.06] shrink-0">
                             {/* Logout (Now at the top on mobile) */}
                             <button onClick={handleSystemLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition w-full sm:w-auto order-1 sm:order-4 h-4 sm:h-auto flex items-center justify-center">
                                 <span className="leading-none">{language === 'am' ? 'ውጣ' : 'Logout'}</span>
