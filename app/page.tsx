@@ -1107,6 +1107,11 @@ export default function CappadociaApp() {
                         <p className="text-[9px] sm:text-[11px] text-blue-300/80 mt-0.5 sm:mt-1 font-medium">
                             {language === 'am' ? 'የግንባታ እቃዎችና የጥቃቅን ገንዘብ ቁጥጥር (Stores & Petty Cash)' : 'Building Materials & Petty Cash Control System'}
                         </p>
+                        {user && (
+                            <p className="text-[10px] font-bold text-white tracking-wide mt-1.5 md:hidden opacity-90">
+                                {language === 'am' ? user.nameAm : user.nameEn} <span className="text-white/50 mx-1">•</span> <span className="text-blue-300">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</span>
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap justify-center items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2.5 rounded-2xl border border-white/[0.06] mt-2 md:mt-0">
@@ -1139,11 +1144,6 @@ export default function CappadociaApp() {
 
                         {user && (
                             <>
-                                <div className="w-full text-center md:hidden pb-1 mb-1 border-b border-white/10">
-                                    <p className="text-[10px] font-bold text-white tracking-wide">
-                                        {language === 'am' ? user.nameAm : user.nameEn} <span className="text-white/50 mx-1">•</span> <span className="text-blue-300">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</span>
-                                    </p>
-                                </div>
 
                                 <div className="w-px h-5 sm:h-6 bg-white/10 mx-0.5 hidden sm:block"></div>
 
