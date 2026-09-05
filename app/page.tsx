@@ -1145,8 +1145,7 @@ export default function CappadociaApp() {
                                     onClick={() => setShowInstantApprovalPopup(true)}
                                     className="relative bg-white/10 hover:bg-white/20 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition"
                                 >
-                                    <span className="hidden sm:inline">{language === 'am' ? 'መልዕክቶች' : 'Messages'}</span>
-                                    <span className="sm:hidden">💬</span>
+                                    {language === 'am' ? 'መልዕክቶች' : 'Messages'}
                                     {visibleSystemMessages.length > 0 && (
                                         <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full bg-blue-600 text-white text-[9px] sm:text-[10px] font-black flex items-center justify-center border border-[#0a1232]">
                                             {visibleSystemMessages.length}
@@ -1172,8 +1171,7 @@ export default function CappadociaApp() {
                                     onClick={handleSystemLogout}
                                     className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition"
                                 >
-                                    <span className="hidden sm:inline">{language === 'am' ? 'ውጣ' : 'Logout'}</span>
-                                    <span className="sm:hidden">🚪</span>
+                                    {language === 'am' ? 'ውጣ' : 'Logout'}
                                 </button>
                             </>
                         )}
