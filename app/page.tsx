@@ -1109,70 +1109,74 @@ export default function CappadociaApp() {
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mt-2 md:mt-0">
-                        {/* DAY/NIGHT MODE & BILINGUAL TOGGLES */}
-                        <div className="flex items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2 rounded-2xl border border-white/[0.06]">
+                    <div className="flex flex-wrap justify-center items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2.5 rounded-2xl border border-white/[0.06] mt-2 md:mt-0">
                         {/* Bilingual Switcher */}
-                        <div className="flex bg-[#F4F7FE]/15 p-0.5 rounded-xl text-xs">
+                        <div className="flex bg-[#F4F7FE]/15 p-0.5 rounded-xl text-[10px] sm:text-xs">
                             <button
                                 onClick={() => setLanguage('am')}
-                                className={`px-3 py-1 rounded-lg font-bold transition-all ${language === 'am' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}
+                                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold transition-all ${language === 'am' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}
                             >
-                                አማርኛ
+                                <span className="hidden sm:inline">አማርኛ</span>
+                                <span className="sm:hidden">አማ</span>
                             </button>
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-3 py-1 rounded-lg font-bold transition-all ${language === 'en' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}
+                                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold transition-all ${language === 'en' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}
                             >
-                                English
+                                <span className="hidden sm:inline">English</span>
+                                <span className="sm:hidden">EN</span>
                             </button>
                         </div>
 
                         {/* Night / Day Switcher */}
                         <button
                             onClick={() => setIsDarkMode(!isDarkMode)}
-                            className="p-1.5 rounded-xl bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all"
+                            className="p-1 sm:p-1.5 rounded-xl bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all text-[10px] sm:text-base"
                             title="Toggle Day/Night"
                         >
                             {isDarkMode ? '☀️' : '🌙'}
                         </button>
-                    </div>
 
+                        {user && (
+                            <>
+                                <div className="w-px h-5 sm:h-6 bg-white/10 mx-0.5 hidden sm:block"></div>
 
-
-                    {user && (
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2.5 rounded-2xl border border-white/[0.06]">
-                            <button
-                                onClick={() => setShowInstantApprovalPopup(true)}
-                                className="relative bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"
-                            >
-                                {language === 'am' ? 'መልዕክቶች' : 'Messages'}
-                                {visibleSystemMessages.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">
-                                        {visibleSystemMessages.length}
-                                    </span>
-                                )}
-                            </button>
-                            <div className="text-right hidden sm:block">
-                                <p className="text-xs font-black text-white">{language === 'am' ? user.nameAm : user.nameEn}</p>
-                                <p className="text-[10px] text-blue-200">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</p>
-                            </div>
-                            {/* Account / Security Settings button */}
-                            <button
-                                onClick={() => setShowChangePassword(true)}
-                                title={language === 'am' ? 'የይለፍ ቃል ቀይር' : 'Account Settings'}
-                                className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
-                            >
-                                🔐 <span className="hidden sm:inline">{language === 'am' ? 'ደህንነት' : 'Security'}</span>
-                            </button>
-                            <button
-                                onClick={handleSystemLogout}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"
-                            >
-                                {language === 'am' ? 'ውጣ' : 'Logout'}
-                            </button>
-                        </div>
-                    )}
+                                <button
+                                    onClick={() => setShowInstantApprovalPopup(true)}
+                                    className="relative bg-white/10 hover:bg-white/20 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition"
+                                >
+                                    <span className="hidden sm:inline">{language === 'am' ? 'መልዕክቶች' : 'Messages'}</span>
+                                    <span className="sm:hidden">💬</span>
+                                    {visibleSystemMessages.length > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full bg-blue-600 text-white text-[9px] sm:text-[10px] font-black flex items-center justify-center border border-[#0a1232]">
+                                            {visibleSystemMessages.length}
+                                        </span>
+                                    )}
+                                </button>
+                                
+                                <div className="text-right hidden md:block">
+                                    <p className="text-xs font-black text-white">{language === 'am' ? user.nameAm : user.nameEn}</p>
+                                    <p className="text-[10px] text-blue-200">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</p>
+                                </div>
+                                
+                                {/* Account / Security Settings button */}
+                                <button
+                                    onClick={() => setShowChangePassword(true)}
+                                    title={language === 'am' ? 'የይለፍ ቃል ቀይር' : 'Account Settings'}
+                                    className="bg-white/10 hover:bg-white/20 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition flex items-center justify-center"
+                                >
+                                    🔐 <span className="hidden sm:inline ml-1.5">{language === 'am' ? 'ደህንነት' : 'Security'}</span>
+                                </button>
+                                
+                                <button
+                                    onClick={handleSystemLogout}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition"
+                                >
+                                    <span className="hidden sm:inline">{language === 'am' ? 'ውጣ' : 'Logout'}</span>
+                                    <span className="sm:hidden">🚪</span>
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </header>
