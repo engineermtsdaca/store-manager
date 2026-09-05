@@ -1098,9 +1098,9 @@ export default function CappadociaApp() {
                 <div className="max-w-7xl mx-auto flex flex-row justify-between items-center gap-1 sm:gap-4 w-full">
                     
                     {/* LEFT SIDE: Language & Theme */}
-                    <div className="flex flex-row items-center justify-center flex-wrap gap-0.5 sm:gap-1.5 bg-white/[0.06] p-0 sm:p-2.5 rounded-md sm:rounded-xl border border-white/[0.06] shrink-0 max-w-[85px] sm:max-w-none">
+                    <div className="flex flex-row items-center justify-center flex-nowrap gap-0.5 sm:gap-1.5 bg-white/[0.06] p-0 sm:p-2.5 rounded-md sm:rounded-xl border border-white/[0.06] shrink-0">
                         {/* Night / Day Switcher (Now at the top) */}
-                        <button onClick={() => setIsDarkMode(!isDarkMode)} className="py-0 px-1 sm:p-1.5 rounded-lg bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all text-[10px] sm:text-base w-full sm:w-auto flex items-center justify-center h-4 sm:h-auto" title="Toggle Day/Night">
+                        <button onClick={() => setIsDarkMode(!isDarkMode)} className="py-0 px-1 sm:p-1.5 rounded-lg bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all text-[10px] sm:text-base w-auto flex items-center justify-center h-4 sm:h-auto" title="Toggle Day/Night">
                             <span className="transform scale-75 origin-center">{isDarkMode ? '☀️' : '🌙'}</span>
                         </button>
                         {/* Bilingual Switcher */}
@@ -1135,20 +1135,20 @@ export default function CappadociaApp() {
 
                     {/* RIGHT SIDE: Action Buttons */}
                     {user && (
-                        <div className="flex flex-row items-center justify-center flex-wrap gap-0.5 sm:gap-1.5 bg-white/[0.06] p-0 sm:p-2.5 rounded-md sm:rounded-xl border border-white/[0.06] shrink-0 max-w-[110px] sm:max-w-none">
+                        <div className="flex flex-row items-center justify-center flex-nowrap gap-0.5 sm:gap-1.5 bg-white/[0.06] p-0 sm:p-2.5 rounded-md sm:rounded-xl border border-white/[0.06] shrink-0">
                             {/* Logout (Now at the top on mobile) */}
-                            <button onClick={handleSystemLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition w-full sm:w-auto order-1 sm:order-4 h-4 sm:h-auto flex items-center justify-center">
-                                <span className="leading-none">{language === 'am' ? 'ውጣ' : 'Logout'}</span>
+                            <button onClick={handleSystemLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition w-auto order-1 sm:order-4 h-4 sm:h-auto flex items-center justify-center">
+                                <span className="leading-none whitespace-nowrap">{language === 'am' ? 'ውጣ' : 'Logout'}</span>
                             </button>
                             
                             {/* Security (Key Button) (Now 2nd on mobile) Minimized height */}
-                            <button onClick={() => setShowChangePassword(true)} title={language === 'am' ? 'የይለፍ ቃል ቀይር' : 'Account Settings'} className="bg-white/10 hover:bg-white/20 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition flex items-center justify-center w-full sm:w-auto order-2 sm:order-3 h-4 sm:h-auto">
-                                <span className="transform scale-[0.65] origin-center leading-none">🔐</span> <span className="hidden sm:inline ml-1.5">{language === 'am' ? 'ደህንነት' : 'Security'}</span>
+                            <button onClick={() => setShowChangePassword(true)} title={language === 'am' ? 'የይለፍ ቃል ቀይር' : 'Account Settings'} className="bg-white/10 hover:bg-white/20 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition flex items-center justify-center w-auto order-2 sm:order-3 h-4 sm:h-auto">
+                                <span className="transform scale-[0.65] origin-center leading-none">🔐</span> <span className="hidden sm:inline ml-1.5 whitespace-nowrap">{language === 'am' ? 'ደህንነት' : 'Security'}</span>
                             </button>
 
                             {/* Messages (Now 3rd on mobile) */}
-                            <button onClick={() => setShowInstantApprovalPopup(true)} className="relative bg-white/10 hover:bg-white/20 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition flex items-center justify-center w-full sm:w-auto order-3 sm:order-1 h-4 sm:h-auto">
-                                <span className="leading-none">{language === 'am' ? 'መልዕክት' : 'Messages'}</span>
+                            <button onClick={() => setShowInstantApprovalPopup(true)} className="relative bg-white/10 hover:bg-white/20 text-white text-[8px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition flex items-center justify-center w-auto order-3 sm:order-1 h-4 sm:h-auto">
+                                <span className="leading-none whitespace-nowrap">{language === 'am' ? 'መልዕክት' : 'Messages'}</span>
                                 {visibleSystemMessages.length > 0 && (
                                     <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full bg-blue-600 text-white text-[8px] sm:text-[10px] font-black flex items-center justify-center border border-[#0a1232]">
                                         {visibleSystemMessages.length}
