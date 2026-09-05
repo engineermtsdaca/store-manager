@@ -1100,7 +1100,7 @@ export default function CappadociaApp() {
                         <span className="text-[9px] sm:text-[10px] font-bold bg-gradient-to-r from-blue-600 to-blue-500 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full tracking-wider text-white uppercase shadow-lg shadow-blue-600/25">
                             {language === 'am' ? 'የተቀናጀ የቁጥጥር ሥርዓት' : 'Unified Control System'}
                         </span>
-                        <h1 className="text-xs sm:text-lg font-black mt-1.5 sm:mt-2.5 tracking-tight text-white uppercase">
+                        <h1 className="text-xs sm:text-lg font-bold sm:font-extrabold mt-1.5 sm:mt-2.5 tracking-tight text-white/90 uppercase">
                             <span className="hidden sm:inline">CAPPADOCIA REALESTATE S.C. • ADDISU HABTE • VILA VERDE</span>
                             <span className="sm:hidden">CAPPADOCIA R.E. • ADDISU HABTE</span>
                         </h1>
@@ -1109,8 +1109,9 @@ export default function CappadociaApp() {
                         </p>
                     </div>
 
-                    {/* DAY/NIGHT MODE & BILINGUAL TOGGLES */}
-                    <div className="flex items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2 rounded-2xl border border-white/[0.06]">
+                    <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mt-2 md:mt-0">
+                        {/* DAY/NIGHT MODE & BILINGUAL TOGGLES */}
+                        <div className="flex items-center gap-1.5 sm:gap-3 bg-white/[0.06] p-1.5 sm:p-2 rounded-2xl border border-white/[0.06]">
                         {/* Bilingual Switcher */}
                         <div className="flex bg-[#F4F7FE]/15 p-0.5 rounded-xl text-xs">
                             <button
@@ -1172,6 +1173,7 @@ export default function CappadociaApp() {
                             </button>
                         </div>
                     )}
+                    </div>
                 </div>
             </header>
 
