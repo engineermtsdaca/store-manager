@@ -1098,17 +1098,17 @@ export default function CappadociaApp() {
                 <div className="max-w-7xl mx-auto flex flex-row justify-between items-center gap-1 sm:gap-4 w-full">
                     
                     {/* LEFT SIDE: Language & Theme */}
-                    <div className="flex flex-col sm:flex-row items-center gap-1.5 bg-white/[0.06] p-1 sm:p-2.5 rounded-xl border border-white/[0.06] shrink-0">
+                    <div className="flex flex-col sm:flex-row items-center gap-1 bg-white/[0.06] p-0.5 sm:p-2.5 rounded-xl border border-white/[0.06] shrink-0">
                         {/* Night / Day Switcher (Now at the top) */}
-                        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-0.5 sm:p-1.5 rounded-lg bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all text-[10px] sm:text-base w-full sm:w-auto" title="Toggle Day/Night">
+                        <button onClick={() => setIsDarkMode(!isDarkMode)} className="py-0 px-1 sm:p-1.5 rounded-lg bg-[#F4F7FE]/10 text-white hover:bg-white/20 transition-all text-[10px] sm:text-base w-full sm:w-auto leading-none h-5 sm:h-auto" title="Toggle Day/Night">
                             {isDarkMode ? '☀️' : '🌙'}
                         </button>
                         {/* Bilingual Switcher */}
-                        <div className="flex bg-[#F4F7FE]/15 p-0.5 rounded-lg text-[9px] sm:text-xs">
-                            <button onClick={() => setLanguage('am')} className={`px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md font-bold transition-all ${language === 'am' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}>
+                        <div className="flex bg-[#F4F7FE]/15 p-0 rounded-lg text-[9px] sm:text-xs">
+                            <button onClick={() => setLanguage('am')} className={`px-1.5 sm:px-3 py-0 sm:py-1 rounded-md font-bold transition-all h-5 sm:h-auto leading-none ${language === 'am' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}>
                                 <span className="hidden sm:inline">አማርኛ</span><span className="sm:hidden">አማ</span>
                             </button>
-                            <button onClick={() => setLanguage('en')} className={`px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md font-bold transition-all ${language === 'en' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}>
+                            <button onClick={() => setLanguage('en')} className={`px-1.5 sm:px-3 py-0 sm:py-1 rounded-md font-bold transition-all h-5 sm:h-auto leading-none ${language === 'en' ? 'bg-blue-600 text-white shadow' : 'text-blue-200'}`}>
                                 <span className="hidden sm:inline">English</span><span className="sm:hidden">EN</span>
                             </button>
                         </div>
@@ -1135,25 +1135,25 @@ export default function CappadociaApp() {
 
                     {/* RIGHT SIDE: Action Buttons */}
                     {user && (
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 bg-white/[0.06] p-1 sm:p-2.5 rounded-xl border border-white/[0.06] shrink-0">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-1 bg-white/[0.06] p-0.5 sm:p-2.5 rounded-xl border border-white/[0.06] shrink-0">
                             {/* Logout (Now at the top on mobile) */}
-                            <button onClick={handleSystemLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg transition w-full sm:w-auto order-1 sm:order-4">
+                            <button onClick={handleSystemLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition w-full sm:w-auto order-1 sm:order-4 h-5 sm:h-auto leading-none">
                                 {language === 'am' ? 'ውጣ' : 'Logout'}
                             </button>
+                            
+                            {/* Security (Key Button) (Now 2nd on mobile) Minimized height */}
+                            <button onClick={() => setShowChangePassword(true)} title={language === 'am' ? 'የይለፍ ቃል ቀይር' : 'Account Settings'} className="bg-white/10 hover:bg-white/20 text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition flex items-center justify-center w-full sm:w-auto order-2 sm:order-3 h-5 sm:h-auto leading-none">
+                                <span className="text-[10px] sm:text-base leading-none">🔐</span> <span className="hidden sm:inline ml-1.5">{language === 'am' ? 'ደህንነት' : 'Security'}</span>
+                            </button>
 
-                            {/* Messages */}
-                            <button onClick={() => setShowInstantApprovalPopup(true)} className="relative bg-white/10 hover:bg-white/20 text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg transition w-full sm:w-auto order-2 sm:order-1">
+                            {/* Messages (Now 3rd on mobile) */}
+                            <button onClick={() => setShowInstantApprovalPopup(true)} className="relative bg-white/10 hover:bg-white/20 text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-3 py-0 sm:py-1.5 rounded-lg transition w-full sm:w-auto order-3 sm:order-1 h-5 sm:h-auto leading-none">
                                 {language === 'am' ? 'መልዕክት' : 'Messages'}
                                 {visibleSystemMessages.length > 0 && (
                                     <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full bg-blue-600 text-white text-[8px] sm:text-[10px] font-black flex items-center justify-center border border-[#0a1232]">
                                         {visibleSystemMessages.length}
                                     </span>
                                 )}
-                            </button>
-                            
-                            {/* Security (Key Button) Minimized height */}
-                            <button onClick={() => setShowChangePassword(true)} title={language === 'am' ? 'የይለፍ ቃል ቀይር' : 'Account Settings'} className="bg-white/10 hover:bg-white/20 text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg transition flex items-center justify-center w-full sm:w-auto order-3 sm:order-3">
-                                <span className="text-[10px] sm:text-base">🔐</span> <span className="hidden sm:inline ml-1.5">{language === 'am' ? 'ደህንነት' : 'Security'}</span>
                             </button>
 
                             <div className="text-right hidden md:block w-full sm:w-auto order-4 sm:order-2">
