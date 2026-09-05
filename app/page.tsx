@@ -1097,18 +1097,18 @@ export default function CappadociaApp() {
             <header className={`sticky top-0 z-40 px-3 sm:px-5 py-2.5 sm:py-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0a1232]/90 border-slate-800/50 glass' : 'bg-blue-950/95 text-white glass border-red-600/30'}`}>
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4">
                     <div className="text-center md:text-left">
-                        <span className="text-[7px] sm:text-[10px] font-bold bg-gradient-to-r from-blue-600 to-blue-500 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full tracking-wider text-white uppercase shadow-lg shadow-blue-600/25">
+                        <span className="text-[6px] sm:text-[10px] font-bold bg-gradient-to-r from-blue-600 to-blue-500 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full tracking-widest text-white uppercase shadow-lg shadow-blue-600/25">
                             {language === 'am' ? 'የተቀናጀ የቁጥጥር ሥርዓት' : 'Unified Control System'}
                         </span>
-                        <h1 className="text-[9px] sm:text-lg font-bold sm:font-extrabold mt-1 sm:mt-2.5 tracking-tight text-white/90 uppercase">
+                        <h1 className="text-[8px] sm:text-lg font-bold sm:font-extrabold mt-1 sm:mt-2.5 tracking-tight text-white/90 uppercase leading-none">
                             <span className="hidden sm:inline">CAPPADOCIA REALESTATE S.C. • ADDISU HABTE • VILA VERDE</span>
                             <span className="sm:hidden">CAPPADOCIA R.E. • ADDISU HABTE</span>
                         </h1>
-                        <p className="text-[7px] sm:text-[11px] text-blue-300/80 mt-0.5 sm:mt-1 font-medium">
+                        <p className="text-[6px] sm:text-[11px] text-blue-300/80 mt-0.5 sm:mt-1 font-medium leading-tight">
                             {language === 'am' ? 'የግንባታ እቃዎችና የጥቃቅን ገንዘብ ቁጥጥር (Stores & Petty Cash)' : 'Building Materials & Petty Cash Control System'}
                         </p>
                         {user && (
-                            <p className="text-[8px] sm:text-[10px] font-bold text-white tracking-wide mt-1 md:hidden opacity-90">
+                            <p className="text-[7px] sm:text-[10px] font-bold text-white tracking-wide mt-1 md:hidden opacity-90 leading-none">
                                 {language === 'am' ? user.nameAm : user.nameEn} <span className="text-white/50 mx-1">•</span> <span className="text-blue-300">{user.site || (language === 'am' ? 'ማዕከላዊ አስተዳደር' : 'Central Admin')}</span>
                             </p>
                         )}
